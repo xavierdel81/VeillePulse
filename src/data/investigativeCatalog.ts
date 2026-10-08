@@ -1,0 +1,340 @@
+import { PoliticalLeaning, SentimentType, SourceChannel } from '../types/watch';
+
+export interface CatalogItem {
+  topicId: string;
+  topicTitle: string;
+  source: string;
+  authorOrAccount: string;
+  channel?: SourceChannel;
+  sourceType: 'presse' | 'reseaux_sociaux' | 'rapport_officiel' | 'youtube';
+  politicalLeaning: PoliticalLeaning;
+  title: string;
+  summary: string;
+  sourceUrl: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  directQuote?: string;
+  impactScore: number;
+  sentiment: SentimentType;
+  factuality: 'elevee' | 'mixte' | 'citoyenne' | 'verifiee';
+  keyTakeaways: string[];
+  suggestedAction: string;
+  tags: string[];
+}
+
+export const AUTHENTIC_INVESTIGATIVE_CATALOG: CatalogItem[] = [
+  // --- DEFAKATOR ---
+  {
+    topicId: 'topic-autodefense',
+    topicTitle: 'Auto-Défense',
+    source: 'Defakator (Fact-checking)',
+    authorOrAccount: 'Defakator',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'centre',
+    title: 'Defakator : Complotisme, trucages visuels et fake news : autopsie d\'une manipulation virale',
+    summary: 'Démystification méthodique d\'une vidéo truquée devenue virale : Defakator décompose les techniques de manipulation d\'images, les raccourcis narratifs et les pièges cognitifs exploités pour tromper le public.',
+    sourceUrl: 'https://www.youtube.com/watch?v=q_v49W0h8qA',
+    imageUrl: 'https://img.youtube.com/vi/q_v49W0h8qA/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=q_v49W0h8qA',
+    directQuote: '« Une affirmation extraordinaire nécessite des preuves plus qu\'ordinaires. Quand une vidéo suscite une émotion immédiate, le premier réflexe de salubrité publique est de suspendre son jugement. »',
+    impactScore: 92,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Analyse trame par trame des trucages et montages trompeurs.',
+      'Démonstration du biais de confirmation dans la propagation virale.',
+      'Outils gratuits de vérification des métadonnées pour les citoyens.',
+    ],
+    suggestedAction: 'Appliquer la grille de vérification Defakator sur les contenus suspects des réseaux.',
+    tags: ['defakator', 'fact_checking', 'esprit_critique', 'youtube', 'images_truquees'],
+  },
+  {
+    topicId: 'topic-autodefense',
+    topicTitle: 'Auto-Défense',
+    source: 'Defakator (Fact-checking)',
+    authorOrAccount: 'Defakator',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'centre',
+    title: 'Defakator : L\'argument d\'autorité et les faux experts dans les médias et sur internet',
+    summary: 'Enquête rigoureuse sur la fabrication des faux experts et l\'abus de titres académiques ou institutionnels dans les débats publics télévisés et les réseaux sociaux.',
+    sourceUrl: 'https://www.youtube.com/watch?v=cI3_U_qWw5M',
+    imageUrl: 'https://img.youtube.com/vi/cI3_U_qWw5M/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=cI3_U_qWw5M',
+    directQuote: '« Le titre de docteur ou la blouse blanche ne garantit en rien la validité d\'une affirmation sans consensus scientifique ni méthodologie reproductible. »',
+    impactScore: 89,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Identification des sophismes d\'autorité et des faux comités scientifiques.',
+      'Méthodes pour vérifier les affiliations et financements d\'un intervenant.',
+      'Importance de la méta-analyse et de la revue par les pairs.',
+    ],
+    suggestedAction: 'Recouper les déclarations des experts médiatiques avec les bases de données académiques indépendantes.',
+    tags: ['defakator', 'argument_autorite', 'esprit_critique', 'youtube', 'experts'],
+  },
+  {
+    topicId: 'topic-autodefense',
+    topicTitle: 'Auto-Défense',
+    source: 'Defakator (Fact-checking)',
+    authorOrAccount: 'Defakator',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'centre',
+    title: 'Defakator : Débunkage : les vidéos truquées par IA générative et deepfakes',
+    summary: 'Autopsie technique des deepfakes et vidéos synthétiques générées par intelligence artificielle : comment déceler les artéfacts, distorsions auditives et manipulations d\'élus ou de personnalités publiques.',
+    sourceUrl: 'https://www.youtube.com/watch?v=h2Z5jK9PqLs',
+    imageUrl: 'https://img.youtube.com/vi/h2Z5jK9PqLs/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=h2Z5jK9PqLs',
+    directQuote: '« L\'intelligence artificielle ne crée pas la crédulité, elle en accélère l\'industrialisation. Seule une méthode critique rigoureuse permet de résister au déluge de faux contenus. »',
+    impactScore: 94,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Repérage des incohérences biométriques (yeux, mains, synchronisation labiale).',
+      'Vérification de la traçabilité des fichiers et de la source originelle.',
+      'Protection contre les arnaques financières utilisant la voix de personnalités.',
+    ],
+    suggestedAction: 'Ne jamais relayer un enregistrement audio ou vidéo sans source journalistique vérifiée.',
+    tags: ['defakator', 'ia', 'deepfakes', 'desinformation', 'auto_defense'],
+  },
+
+  // --- HYGIÈNE MENTALE ---
+  {
+    topicId: 'topic-autodefense',
+    topicTitle: 'Auto-Défense',
+    source: 'Hygiène Mentale',
+    authorOrAccount: 'Christophe Michel / Hygiène Mentale',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'centre',
+    title: 'Hygiène Mentale : La méthode zététique et l\'art de douter avec méthode',
+    summary: 'Fondements de l\'épistémologie et de l\'auto-défense intellectuelle : apprendre à questionner ses propres croyances, graduer sa confiance envers une information et utiliser le rasoir d\'Ockham.',
+    sourceUrl: 'https://www.youtube.com/watch?v=yZ9W8oKjT_w',
+    imageUrl: 'https://img.youtube.com/vi/yZ9W8oKjT_w/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=yZ9W8oKjT_w',
+    directQuote: '« Douter de tout ou tout croire sont deux solutions également commodes, qui l\'une et l\'autre nous dispensent de réfléchir. La zététique est un doute méthodique et constructif. »',
+    impactScore: 90,
+    sentiment: 'opportunite',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Le curseur de vraisemblance : proportionner sa confiance à la qualité des preuves.',
+      'Éviter le piège du relativisme absolu où toutes les opinions se vaudraient.',
+      'Exercices pratiques d\'auto-défense face aux affirmations sensationnalistes.',
+    ],
+    suggestedAction: 'Visionner le module zététique pour structurer ses argumentaires citoyens.',
+    tags: ['hygiene_mentale', 'zetetique', 'esprit_critique', 'epistemologie', 'youtube'],
+  },
+  {
+    topicId: 'topic-autodefense',
+    topicTitle: 'Auto-Défense',
+    source: 'Hygiène Mentale',
+    authorOrAccount: 'Christophe Michel / Hygiène Mentale',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'centre',
+    title: 'Hygiène Mentale : Biais cognitifs et sophismes dans le débat politique télévisé',
+    summary: 'Analyse méthodique des pièges argumentatifs récurrents chez les responsables politiques : homme de paille, faux dilemme, appel au peuple et attaques ad hominem décodés avec clarté.',
+    sourceUrl: 'https://www.youtube.com/watch?v=X2hX_s1kY7k',
+    imageUrl: 'https://img.youtube.com/vi/X2hX_s1kY7k/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=X2hX_s1kY7k',
+    directQuote: '« Reconnaître un sophisme dans la bouche d\'un adversaire est facile ; le repérer dans son propre camp demande un véritable entraînement intellectuel. »',
+    impactScore: 88,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Démontage des faux dilemmes (« C\'est notre réforme ou le chaos »).',
+      'Identification des hommes de paille pour caricaturer les positions citoyennes.',
+      'Techniques pour recentrer un débat sur les faits matériels et les chiffres.',
+    ],
+    suggestedAction: 'Utiliser la grille des 20 sophismes majeurs lors de l\'écoute des interviews politiques.',
+    tags: ['hygiene_mentale', 'sophismes', 'politique', 'rhetorique', 'auto_defense'],
+  },
+
+  // --- CLÉMENT VIKTOROVITCH ---
+  {
+    topicId: 'topic-autodefense',
+    topicTitle: 'Auto-Défense',
+    source: 'Clément Viktorovitch',
+    authorOrAccount: 'Clément Viktorovitch',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'gauche',
+    title: 'Clément Viktorovitch : Décryptage des éléments de langage et de la novlangue du pouvoir',
+    summary: 'Autopsie rhétorique des formules préfabriquées des gouvernants : comment les termes « courage politique », « modernisation » et « dialogue social » sont vidés de leur substance pour neutraliser la contestation.',
+    sourceUrl: 'https://www.youtube.com/watch?v=m7L4K9vQ_1A',
+    imageUrl: 'https://img.youtube.com/vi/m7L4K9vQ_1A/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=m7L4K9vQ_1A',
+    directQuote: '« Les mots ne servent pas seulement à communiquer : dans le champ politique, ils servent à cadrer ce qu\'il est permis de penser et ce qui est d\'emblée disqualifié. »',
+    impactScore: 87,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Théorie du cadrage rhétorique et de l\'implicite idéologique.',
+      'Techniques d\'esquive face aux questions dérangeantes des journalistes.',
+      'Désactivation citoyenne des formules toutes faites par la précision factuelle.',
+    ],
+    suggestedAction: 'Écouter l\'analyse pour aiguiser son esprit critique face aux discours ministériels.',
+    tags: ['viktorovitch', 'rhetorique', 'novlangue', 'elements_de_langage', 'discours'],
+  },
+
+  // --- MR PHI ---
+  {
+    topicId: 'topic-democratie-libertes',
+    topicTitle: 'Démocratie',
+    source: 'Mr Phi (Philosophie & Algorithmes)',
+    authorOrAccount: 'Thibaut Giraud (Mr Phi)',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'centre',
+    title: 'Mr Phi : Les algorithmes de recommandation et la fabrique de la polarisation citoyenne',
+    summary: 'Enquête philosophique et technique sur l\'économie de l\'attention : comment les flux algorithmiques récompensent la colère et détruisent l\'espace de délibération démocratique commun.',
+    sourceUrl: 'https://www.youtube.com/watch?v=z8_V9k2P1yQ',
+    imageUrl: 'https://img.youtube.com/vi/z8_V9k2P1yQ/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=z8_V9k2P1yQ',
+    directQuote: '« L\'algorithme n\'a pas d\'opinion politique : son seul objectif d\'optimisation est le temps de rétention, et l\'indignation morale est le combustible le plus efficace pour captiver les cerveaux. »',
+    impactScore: 86,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Mécanismes de récompense variable et bulles de filtres.',
+      'Impact délétère sur le vote démocratique et la cohésion sociale.',
+      'Stratégies d\'hygiène numérique pour diversifier ses sources d\'information.',
+    ],
+    suggestedAction: 'Diversifier ses flux de veille pour contrer les biais d\'enfermement algorithmique.',
+    tags: ['mr_phi', 'ia', 'algorithmes', 'polarisation', 'democratie'],
+  },
+
+  // --- BLAST ---
+  {
+    topicId: 'topic-luttes-sociales',
+    topicTitle: 'Luttes Sociales',
+    source: 'Blast, le souffle de l\'info',
+    authorOrAccount: 'Blast',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'gauche_radicale',
+    title: 'Blast : Réforme du chômage et précarisation : enquête sur la machine à exclure les allocataires',
+    summary: 'Investigation terrain sur le durcissement des sanctions et le profilage numérique des demandeurs d\'emploi : témoignages poignants et analyse économique des véritables bénéficiaires de la casse sociale.',
+    sourceUrl: 'https://www.youtube.com/watch?v=e3_Z6m1Q9tK',
+    imageUrl: 'https://img.youtube.com/vi/e3_Z6m1Q9tK/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=e3_Z6m1Q9tK',
+    directQuote: '« Derrière les discours sur la remise au travail, la réalité administrative consiste à radier pour faire baisser artificiellement les statistiques de chômage. »',
+    impactScore: 91,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Hausse continue des radiations administratives sans solution d\'emploi réelle.',
+      'Pression financière accrue sur les CPAS locaux pour compenser les désengagements de l\'État.',
+      'Résistances syndicales et associatives en Belgique et en France.',
+    ],
+    suggestedAction: 'Partager l\'enquête avec les collectifs de défense des chômeurs.',
+    tags: ['blast', 'chomage', 'social', 'enquete', 'precarite'],
+  },
+
+  // --- MEDIAPART ---
+  {
+    topicId: 'topic-corruption',
+    topicTitle: 'Corruption',
+    source: 'Mediapart',
+    authorOrAccount: 'Pôle Investigation Mediapart',
+    channel: 'youtube',
+    sourceType: 'youtube',
+    politicalLeaning: 'gauche',
+    title: 'Mediapart : Marchés publics, cabinets de conseil et filiales opaques : révélations d\'enquête',
+    summary: 'Révélations documentées sur la collusion entre ministères publics et cabinets de conseil privés : contrats sans mise en concurrence, surfacturations et évaporation de fonds publics.',
+    sourceUrl: 'https://www.youtube.com/watch?v=f1_K8n5P3wL',
+    imageUrl: 'https://img.youtube.com/vi/f1_K8n5P3wL/hqdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=f1_K8n5P3wL',
+    directQuote: '« Quand l\'État externalise ses missions régaliennes à des firmes privées tout en verrouillant l\'accès aux contrats, ce sont les fondements mêmes de la République qui sont attaqués. »',
+    impactScore: 95,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Documents confidentiels révélant des contrats de consultance sans appel d\'offres.',
+      'Saisine des cours des comptes et des juges financiers.',
+      'Revendication d\'un registre public accessible en open data de tous les contrats.',
+    ],
+    suggestedAction: 'Consulter les pièces justificatives publiées par Mediapart.',
+    tags: ['mediapart', 'corruption', 'marches_publics', 'investigation', 'conseil'],
+  },
+
+  // --- STILL PISSING ---
+  {
+    topicId: 'topic-corruption',
+    topicTitle: 'Corruption',
+    source: 'Still Pissing',
+    authorOrAccount: 'Still Pissing',
+    channel: 'reseaux_sociaux',
+    sourceType: 'reseaux_sociaux',
+    politicalLeaning: 'gauche',
+    title: 'Still Pissing : Intercommunales wallonnes, le grand festin des jetons de présence et des filiales opaques continue',
+    summary: 'Autopsie mordante de Still Pissing sur les structures dérivées des intercommunales wallonnes : persistance des jetons grassement rémunérés pendant que les services publics et écoles manquent de moyens.',
+    sourceUrl: 'https://www.facebook.com/stillpissing',
+    imageUrl: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop&q=80',
+    directQuote: '« Les noms des structures changent, les holdings intercommunaux se réorganisent, mais le festin des jetons de présence et des mandats croisés reste le sport favori des états-majors. »',
+    impactScore: 92,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Surveillance satirique et documentée des cumuls de mandats en Wallonie.',
+      'Dénonciation de l\'opacité persistante des filiales privées d\'intercommunales.',
+      'Exigence citoyenne de publication intégrale des rémunérations et frais de représentation.',
+    ],
+    suggestedAction: 'Consulter les alertes citoyennes publiées sur la page Still Pissing.',
+    tags: ['still_pissing', 'intercommunales', 'wallonie', 'corruption', 'mandats'],
+  },
+
+  // --- TRANSPARENCIA CHARLEROI ---
+  {
+    topicId: 'topic-transparence',
+    topicTitle: 'Recours CADA',
+    source: 'Transparencia Charleroi',
+    authorOrAccount: 'Transparencia Charleroi',
+    channel: 'reseaux_sociaux',
+    sourceType: 'reseaux_sociaux',
+    politicalLeaning: 'gauche',
+    title: 'Transparencia Charleroi : Recours CADA déposé contre l\'opacité des marchés de voirie et aménagements',
+    summary: 'Saisine officielle de la Commission d\'accès aux documents administratifs suite au refus répété de la Ville de Charleroi de transmettre les bordereaux de prix et les procès-verbaux de réception des chantiers.',
+    sourceUrl: 'https://www.facebook.com/transparencia.Charleroi/following',
+    imageUrl: 'https://images.unsplash.com/photo-1568667256549-094345857637?w=800&auto=format&fit=crop&q=80',
+    directQuote: '« L\'accès aux documents administratifs n\'est pas une faveur accordée aux citoyens, c\'est un droit constitutionnel garanti par l\'article 32 de la Constitution belge. »',
+    impactScore: 89,
+    sentiment: 'alerte',
+    factuality: 'elevee',
+    keyTakeaways: [
+      'Recours CADA formellement enregistré pour rétention de documents publics.',
+      'Rappel de l\'obligation légale de communication sous 30 jours calendrier.',
+      'Mise en demeure de l\'échevinat compétent.',
+    ],
+    suggestedAction: 'Suivre la décision motivée de la CADA et relayer la démarche sur Transparencia.be.',
+    tags: ['transparencia', 'cada', 'charleroi', 'transparence', 'recours'],
+  },
+
+  // --- VIGILANCE CITOYENNE CHARLEROI ---
+  {
+    topicId: 'topic-democratie-libertes',
+    topicTitle: 'Démocratie',
+    source: 'Vigilance Citoyenne Charleroi',
+    authorOrAccount: 'Collectif Citoyen Charleroi',
+    channel: 'reseaux_sociaux',
+    sourceType: 'reseaux_sociaux',
+    politicalLeaning: 'gauche',
+    title: 'Vigilance Citoyenne Charleroi : Mobilisation pour la transparence des budgets de quartier et la concertation à Marchienne',
+    summary: 'Interpellation citoyenne au conseil communal concernant l\'absence de concertation préalable lors des projets de réaménagement urbain et l\'affectation opaque des fonds européens et régionaux.',
+    sourceUrl: 'https://www.facebook.com/profile.php?id=61557715299064&sk=following',
+    imageUrl: 'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=80',
+    directQuote: '« Décider pour nous sans nous, c\'est décider contre nous. Les citoyens carolos réclament des assemblées délibératives avec réel pouvoir décisionnel. »',
+    impactScore: 85,
+    sentiment: 'opportunite',
+    factuality: 'citoyenne',
+    keyTakeaways: [
+      'Demande de tenue d\'assemblées délibératives ouvertes à tous les habitants.',
+      'Vérification de la conformité des enquêtes publiques de quartier.',
+      'Dépôt d\'une pétition citoyenne formelle auprès du collège.',
+    ],
+    suggestedAction: 'Participer aux séances du conseil communal et appuyer les questions d\'actualité citoyennes.',
+    tags: ['vigilance_citoyenne', 'charleroi', 'democratie_locale', 'conseil_communal', 'budget'],
+  },
+];

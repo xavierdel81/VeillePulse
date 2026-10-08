@@ -381,7 +381,7 @@ export default function App() {
 
   // Core Topic Scanner (performs fetch, deduping against existing alerts, and assigns guaranteed unique images)
   const runTopicScanCore = async (topic: WatchTopic): Promise<NewsAlert[]> => {
-    const result = await scanTopicWithServer(topic);
+    const result = await scanTopicWithServer(topic, alerts);
     if (!result.success || !result.alerts || result.alerts.length === 0) {
       return [];
     }
