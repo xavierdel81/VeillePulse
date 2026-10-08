@@ -1,0 +1,6 @@
+{
+  "name": "VeillePulse - Intelligence & Alertes",
+  "description": "Plateforme de veille informative automatisée avec surveillance de sujets personnalisés, analyse d'impact par IA et notifications par email en temps réel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
