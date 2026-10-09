@@ -127,13 +127,26 @@ export default function App() {
   // Alerts state (with verified real links, breaking student protest coverage, and Ground News standard colors)
   const [alerts, setAlerts] = useState<NewsAlert[]>(() => {
     try {
-      const CURRENT_VERSION = 'v32_manifestations_strictement_luttes_sociales';
+      const CURRENT_VERSION = 'v34_pluralisme_barometre_sans_doublons_equilibre';
       const version = localStorage.getItem('veillepulse_alerts_version');
       const saved = localStorage.getItem('veillepulse_alerts');
       if (saved && version === CURRENT_VERSION) {
         const parsed: NewsAlert[] = JSON.parse(saved);
         const seenImgs = new Set<string>();
-        return parsed.map((rawA) => {
+        const seenTitles = new Set<string>();
+        const seenUrls = new Set<string>();
+
+        const deduplicated = parsed.filter((rawA) => {
+          const normTitle = rawA.title.toLowerCase().trim();
+          const normUrl = (rawA.sourceUrl || '').trim();
+          if (seenTitles.has(normTitle)) return false;
+          seenTitles.add(normTitle);
+          if (normUrl && seenUrls.has(normUrl)) return false;
+          if (normUrl) seenUrls.add(normUrl);
+          return true;
+        });
+
+        return deduplicated.map((rawA) => {
           const a = normalizeAlertTopic(rawA);
           let cleanSourceUrl = a.sourceUrl;
           if (!cleanSourceUrl || cleanSourceUrl.includes('fonts.googleapis') || cleanSourceUrl.includes('fonts.gstatic') || cleanSourceUrl.endsWith('.css')) {
@@ -380,15 +393,21 @@ export default function App() {
   };
 
   // Core Topic Scanner (performs fetch, deduping against existing alerts, and assigns guaranteed unique images)
-  const runTopicScanCore = async (topic: WatchTopic): Promise<NewsAlert[]> => {
-    const result = await scanTopicWithServer(topic, alerts);
+  const runTopicScanCore = async (topic: WatchTopic, currentAlertsList?: NewsAlert[]): Promise<NewsAlert[]> => {
+    const listToCompare = currentAlertsList || alerts;
+    const result = await scanTopicWithServer(topic, listToCompare);
     if (!result.success || !result.alerts || result.alerts.length === 0) {
       return [];
     }
 
-    // Filter out duplicates based on title similarity
+    // Filter out duplicates based on title similarity and URL
     const newUniqueAlerts = result.alerts.filter(
-      (newA) => !alerts.some((existing) => existing.title.toLowerCase().trim() === newA.title.toLowerCase().trim())
+      (newA) =>
+        !listToCompare.some(
+          (existing) =>
+            existing.title.toLowerCase().trim() === newA.title.toLowerCase().trim() ||
+            (existing.sourceUrl && newA.sourceUrl && existing.sourceUrl === newA.sourceUrl)
+        )
     );
 
     // Guarantee that every single new alert has a unique, high-definition image
@@ -499,10 +518,19 @@ export default function App() {
 
       for (const topic of activeTopics) {
         try {
-          const newAlerts = await runTopicScanCore(topic);
+          const combinedList = [...allNewAlerts, ...alerts];
+          const newAlerts = await runTopicScanCore(topic, combinedList);
           if (newAlerts.length > 0) {
-            allNewAlerts = [...allNewAlerts, ...newAlerts];
-            topicCounts[topic.id] = newAlerts.length;
+            const strictlyUnique = newAlerts.filter(
+              (na) =>
+                !allNewAlerts.some(
+                  (existing) =>
+                    existing.title.toLowerCase().trim() === na.title.toLowerCase().trim() ||
+                    (existing.sourceUrl && na.sourceUrl && existing.sourceUrl === na.sourceUrl)
+                )
+            );
+            allNewAlerts = [...allNewAlerts, ...strictlyUnique];
+            topicCounts[topic.id] = strictlyUnique.length;
           }
         } catch (e) {
           console.error(`Error scanning topic ${topic.title}:`, e);
@@ -876,8 +904,8 @@ export default function App() {
     setSelectedTopicId('all');
     localStorage.setItem('veillepulse_topics', JSON.stringify(DEFAULT_TOPICS));
     localStorage.setItem('veillepulse_alerts', JSON.stringify(normalized));
-    localStorage.setItem('veillepulse_alerts_version', 'v29_manifestations_strictement_luttes_sociales');
-    localStorage.setItem('veillepulse_topics_version', 'v29_manifestations_strictement_luttes_sociales');
+    localStorage.setItem('veillepulse_alerts_version', 'v34_pluralisme_barometre_sans_doublons_equilibre');
+    localStorage.setItem('veillepulse_topics_version', 'v34_pluralisme_barometre_sans_doublons_equilibre');
     showToast('Sujets et actualités réinitialisés avec succès (Luttes Sociales vérifiées, formatage Ground News).', 'success');
   };
 

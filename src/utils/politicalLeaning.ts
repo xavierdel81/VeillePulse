@@ -108,6 +108,7 @@ export function getCustomSourceLeanings(): Record<string, PoliticalLeaning> {
     'lecho': 'droite',
     'lecho.be': 'droite',
     'trendstendances': 'droite',
+    'trends': 'droite',
     'partidutravaildebelgique': 'gauche_radicale',
     'partidutravail': 'gauche_radicale',
     'ptb': 'gauche_radicale',
@@ -116,6 +117,19 @@ export function getCustomSourceLeanings(): Record<string, PoliticalLeaning> {
     'mediapart': 'gauche',
     'blast': 'gauche_radicale',
     'liguedesdroitshumains': 'gauche',
+    'pourpress': 'gauche',
+    'pour': 'gauche',
+    'medor': 'gauche',
+    'alterechos': 'gauche',
+    'chronik': 'gauche',
+    'matribune': 'gauche',
+    'clementviktorovitch': 'gauche',
+    'viktorovitch': 'gauche',
+    'rtlinfo': 'droite',
+    'rtl': 'droite',
+    'lefigaro': 'droite',
+    'figaro': 'droite',
+    'ln24': 'droite',
   };
 
   try {
@@ -412,21 +426,42 @@ export function inferPoliticalLeaningFromSource(
   // 6. Analyse éditoriale contextuelle pour les médias généralistes ou régionaux (RTBF, Le Soir, télévisions locales)
   const textContext = `${title || ''} ${summary || ''}`.toLowerCase();
   if (textContext) {
-    // Si l'article traite d'une mobilisation sociale, défense syndicale, contestation étudiante, précarité ou lutte contre l'austérité
+    // Si l'article traite de mobilisation sociale, défense syndicale, contestation étudiante, précarité ou lutte contre l'austérité -> GAUCHE (ROUGE)
     if (
       textContext.includes('grève') ||
       textContext.includes('greve') ||
+      textContext.includes('gréviste') ||
+      textContext.includes('greviste') ||
+      textContext.includes('débrayage') ||
+      textContext.includes('debrayage') ||
+      textContext.includes('cortège') ||
+      textContext.includes('cortege') ||
+      textContext.includes('élève') ||
+      textContext.includes('eleve') ||
       textContext.includes('lycéen') ||
       textContext.includes('lyceen') ||
       textContext.includes('étudiant') ||
+      textContext.includes('etudiant') ||
+      textContext.includes('jeunesse') ||
+      textContext.includes('contestation') ||
+      textContext.includes('mobilisation') ||
       textContext.includes('syndicat') ||
+      textContext.includes('syndicale') ||
       textContext.includes('fgtb') ||
       textContext.includes('csc') ||
+      textContext.includes('cne') ||
+      textContext.includes('setca') ||
+      textContext.includes('cgsp') ||
       textContext.includes('précarité') ||
+      textContext.includes('precarite') ||
+      textContext.includes('pouvoir d\'achat') ||
       textContext.includes('droits sociaux') ||
       textContext.includes('allocataire') ||
-      textContext.includes('sanction') ||
+      textContext.includes('luttes sociales') ||
+      textContext.includes('social') ||
       textContext.includes('manifestation') ||
+      textContext.includes('manif') ||
+      textContext.includes('rassemblement') ||
       textContext.includes('services publics') ||
       textContext.includes('droit de manifester') ||
       textContext.includes('violences policières')
@@ -434,7 +469,7 @@ export function inferPoliticalLeaningFromSource(
       return 'gauche';
     }
 
-    // Si l'article aborde le sujet sous l'angle du coût économique, des réformes budgétaires ou des déclarations patronales
+    // Si l'article aborde le sujet sous l'angle du coût économique, des réformes budgétaires, des sanctions, de l'ordre public ou du patronat -> DROITE (BLEU)
     if (
       textContext.includes('patronat') ||
       textContext.includes('feb') ||
@@ -444,7 +479,12 @@ export function inferPoliticalLeaningFromSource(
       textContext.includes('rigueur') ||
       textContext.includes('compétitivité') ||
       textContext.includes('blocage économique') ||
-      textContext.includes('ordre public')
+      textContext.includes('ordre public') ||
+      textContext.includes('arrestation') ||
+      textContext.includes('casseur-payeur') ||
+      textContext.includes('sanction') ||
+      textContext.includes('fermeté') ||
+      textContext.includes('déficit')
     ) {
       return 'droite';
     }
