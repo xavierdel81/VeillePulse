@@ -88,11 +88,14 @@ export async function scanTopicWithServer(
  */
 export async function scanSourceWithServer(
   source: WatchSource,
-  topics: WatchTopic[]
+  topics: WatchTopic[],
+  existingAlerts?: NewsAlert[]
 ): Promise<{ success: boolean; alerts: NewsAlert[]; count: number; error?: string; isClientMode?: boolean }> {
+  const currentAlerts = existingAlerts || getStoredAlerts();
+
   if (serverKnownUnavailable || isStaticHost()) {
     try {
-      const result = await scanSourceClientSide(source, topics);
+      const result = await scanSourceClientSide(source, topics, currentAlerts);
       return { success: true, alerts: result.alerts, count: result.count, isClientMode: true };
     } catch (e: any) {
       return { success: false, alerts: [], count: 0, error: e.message };
@@ -114,7 +117,7 @@ export async function scanSourceWithServer(
     const contentType = res.headers.get('content-type') || '';
     if (!res.ok || !contentType.includes('application/json')) {
       serverKnownUnavailable = true;
-      const result = await scanSourceClientSide(source, topics);
+      const result = await scanSourceClientSide(source, topics, currentAlerts);
       return { success: true, alerts: result.alerts, count: result.count, isClientMode: true };
     }
 
@@ -123,7 +126,7 @@ export async function scanSourceWithServer(
   } catch (err: any) {
     serverKnownUnavailable = true;
     try {
-      const result = await scanSourceClientSide(source, topics);
+      const result = await scanSourceClientSide(source, topics, currentAlerts);
       return { success: true, alerts: result.alerts, count: result.count, isClientMode: true };
     } catch (clientErr: any) {
       return { success: false, alerts: [], count: 0, error: clientErr.message || 'Erreur lors du scan de la source' };

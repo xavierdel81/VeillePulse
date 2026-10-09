@@ -15,6 +15,10 @@ import {
   getDominantIdeologicalBias,
 } from '../utils/rhetoricAndReliability';
 import { getWaybackMachineUrl, inferPoliticalLeaningFromSource } from '../utils/politicalLeaning';
+import {
+  isDuplicateInCollection,
+  purgeDuplicateAlerts,
+} from '../utils/deduplication';
 
 /**
  * Clean and decode HTML entities from RSS and web text
@@ -507,17 +511,23 @@ export async function scanTopicClientSide(
 
   for (let i = 0; i < candidateItems.length; i++) {
     const item = candidateItems[i];
-    const normTitle = item.title.toLowerCase().trim();
-    const normUrl = (item.link || '').trim();
+    const safeUrl = getSafeArticleUrl(item.link, item.title, item.source || 'Presse');
 
-    // Strict deduplication check
-    if (existingTitles.has(normTitle) || (normUrl && existingUrls.has(normUrl))) {
+    // Create partial alert for deduplication verification
+    const candidateAlert: Partial<NewsAlert> = {
+      title: item.title,
+      source: item.source || 'Presse',
+      sourceUrl: safeUrl,
+    };
+
+    // Strict deduplication check against already recorded alerts and current scan batch
+    if (
+      isDuplicateInCollection(candidateAlert, existingAlerts) ||
+      isDuplicateInCollection(candidateAlert, formattedAlerts)
+    ) {
       continue;
     }
-    existingTitles.add(normTitle);
-    if (normUrl) existingUrls.add(normUrl);
 
-    const safeUrl = getSafeArticleUrl(item.link, item.title, item.source || 'Presse');
     const isVideo = safeUrl.includes('youtube.com') || safeUrl.includes('youtu.be') || Boolean(item.videoUrl);
 
     // Political Leaning: use forcedLeaning if provided in curated catalog, or infer contextually
@@ -590,89 +600,9 @@ export async function scanTopicClientSide(
     });
   }
 
-  // If all curated items were already previously indexed, synthesize a fresh breaking update
-  if (formattedAlerts.length === 0) {
-    const timeNow = new Date();
-    const timeString = `${timeNow.getHours().toString().padStart(2, '0')}h${timeNow.getMinutes().toString().padStart(2, '0')}`;
-    
-    // Choose a complementary angle: alternate between Droite and Gauche
-    const isRightAngle = existingAlerts.filter(a => a.politicalLeaning === 'droite').length <= existingAlerts.filter(a => a.politicalLeaning === 'gauche').length;
-    const freshSource = isRightAngle ? 'L\'Écho (Économie & Entreprises)' : 'Alter Échos (Social & Enquêtes)';
-    const freshPol: PoliticalLeaning = isRightAngle ? 'droite' : 'gauche';
-
-    const freshTitle = isRightAngle
-      ? `L'Écho : Débats budgétaires et dialogue social [${timeString}] : les réactions patronales et ministérielles sur « ${topic.title} »`
-      : `Alter Échos : Mobilisation et défense des droits [${timeString}] : nouvelles revendications citoyennes sur « ${topic.title} »`;
-
-    const safeUrl = getSafeArticleUrl(
-      `https://www.google.com/search?q=${encodeURIComponent('"' + topic.title + '" Belgique')}`,
-      freshTitle,
-      freshSource
-    );
-
-    const uniqueImg = getUniqueArticleImageUrl(
-      freshTitle,
-      freshSource,
-      topic.title,
-      safeUrl,
-      undefined,
-      true
-    );
-
-    const dominantBias = getDominantIdeologicalBias(freshSource, freshPol, safeUrl);
-    const rhetoric = assessRhetoricAndFallacies(freshTitle, '', '');
-    const crossMedia = assessCrossMediaCoverage(freshTitle, 2, 4);
-
-    formattedAlerts.push({
-      id: `alert-fresh-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      topicId: topic.id,
-      topicTitle: topic.title,
-      scope: topic.scope || 'local',
-      sourceType: 'presse',
-      politicalLeaning: freshPol,
-      dominantBiasLabel: dominantBias.biasLabel,
-      crossMediaCoverage: {
-        status: crossMedia.status,
-        count: crossMedia.count,
-        label: crossMedia.label,
-      },
-      rhetoricAssessment: {
-        hasFallacies: rhetoric.hasFallacies,
-        fallaciesCount: rhetoric.fallaciesCount,
-        fallaciesList: rhetoric.fallaciesList,
-        label: rhetoric.label,
-        explanation: rhetoric.explanation,
-      },
-      storyClusterId: `cluster-${topic.id}`,
-      storyClusterTitle: topic.title,
-      imageUrl: uniqueImg,
-      archiveUrl: getWaybackMachineUrl(safeUrl),
-      factuality: 'elevee',
-      title: freshTitle,
-      summary: `Les derniers recoupements d'informations en Belgique confirment des prises de position actives sur ${topic.title.toLowerCase()}. Surveillance continue en temps réel.`,
-      source: freshSource,
-      sourceUrl: safeUrl,
-      authorOrAccount: freshSource,
-      directQuote: `« L'accès régulier aux informations publiques et le pluralisme des débats garantissent la vitalité démocratique. »`,
-      publishedAt: `Aujourd'hui (${currentYear}) à ${timeString}`,
-      publishedDateExact: timeNow.toISOString(),
-      detectedAt: timeNow.toISOString(),
-      impactScore: 84,
-      sentiment: isRightAngle ? 'opportunite' : 'alerte',
-      keyTakeaways: [
-        `Nouvelle mise à jour publiée par ${freshSource}.`,
-        'Attention citoyenne recommandée sur les prochaines déclarations officielles.',
-        'Mise à jour automatique par le radar de veille pluraliste en ligne.',
-      ],
-      suggestedAction: 'Consulter les pièces officielles et comptes rendus publics.',
-      tags: [topic.title, freshSource, 'En direct'],
-      isRead: false,
-      isBookmarked: false,
-      emailSent: false,
-    });
-  }
-
-  return formattedAlerts;
+  // Pure authentic output: if all items are already indexed, return empty array.
+  // Never fabricate dummy or duplicate alerts with time brackets.
+  return purgeDuplicateAlerts(formattedAlerts);
 }
 
 /**
@@ -680,7 +610,8 @@ export async function scanTopicClientSide(
  */
 export async function scanSourceClientSide(
   source: WatchSource,
-  topics: WatchTopic[]
+  topics: WatchTopic[],
+  existingAlerts: NewsAlert[] = []
 ): Promise<{ alerts: NewsAlert[]; count: number }> {
   const currentYear = new Date().getFullYear();
   let candidateArticles: ParsedRssItem[] = [];
@@ -828,7 +759,11 @@ export async function scanSourceClientSide(
     };
   });
 
-  return { alerts, count: alerts.length };
+  const uniqueAlerts = purgeDuplicateAlerts(
+    alerts.filter((a) => !isDuplicateInCollection(a, existingAlerts))
+  );
+
+  return { alerts: uniqueAlerts, count: uniqueAlerts.length };
 }
 
 /**

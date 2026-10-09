@@ -28,11 +28,13 @@ import {
   runDeepAnalysis,
   generateExecutiveBriefing,
 } from './services/apiService';
-import {
-  playAlertChime,
-  sendDesktopNotification,
-} from './services/notificationSound';
+import { playAlertChime, sendDesktopNotification } from './services/notificationSound';
 import { getUniqueArticleImageUrl } from './utils/newsImageGenerator';
+import {
+  purgeDuplicateAlerts,
+  isDuplicateInCollection,
+  isSyntheticAlert,
+} from './utils/deduplication';
 
 import { Header } from './components/Header';
 import { TopicSelector } from './components/TopicSelector';
@@ -127,46 +129,56 @@ export default function App() {
   // Alerts state (with verified real links, breaking student protest coverage, and Ground News standard colors)
   const [alerts, setAlerts] = useState<NewsAlert[]>(() => {
     try {
-      const CURRENT_VERSION = 'v34_pluralisme_barometre_sans_doublons_equilibre';
+      const CURRENT_VERSION = 'v37_strict_dedup_purge_synthetics_alterecho_rtbf';
       const version = localStorage.getItem('veillepulse_alerts_version');
       const saved = localStorage.getItem('veillepulse_alerts');
+
       if (saved && version === CURRENT_VERSION) {
         const parsed: NewsAlert[] = JSON.parse(saved);
+        // Strictly purge any legacy synthetic alerts and duplicates
+        const purged = purgeDuplicateAlerts(parsed);
         const seenImgs = new Set<string>();
-        const seenTitles = new Set<string>();
-        const seenUrls = new Set<string>();
 
-        const deduplicated = parsed.filter((rawA) => {
-          const normTitle = rawA.title.toLowerCase().trim();
-          const normUrl = (rawA.sourceUrl || '').trim();
-          if (seenTitles.has(normTitle)) return false;
-          seenTitles.add(normTitle);
-          if (normUrl && seenUrls.has(normUrl)) return false;
-          if (normUrl) seenUrls.add(normUrl);
-          return true;
-        });
-
-        return deduplicated.map((rawA) => {
+        const normalizedClean = purged.map((rawA) => {
           const a = normalizeAlertTopic(rawA);
           let cleanSourceUrl = a.sourceUrl;
-          if (!cleanSourceUrl || cleanSourceUrl.includes('fonts.googleapis') || cleanSourceUrl.includes('fonts.gstatic') || cleanSourceUrl.endsWith('.css')) {
-            cleanSourceUrl = `https://www.google.com/search?q=${encodeURIComponent('"' + a.title.replace(/[:"«»]/g, ' ').trim().slice(0, 70) + '" ' + a.source)}`;
+          if (
+            !cleanSourceUrl ||
+            cleanSourceUrl.includes('fonts.googleapis') ||
+            cleanSourceUrl.includes('fonts.gstatic') ||
+            cleanSourceUrl.endsWith('.css')
+          ) {
+            cleanSourceUrl = `https://www.google.com/search?q=${encodeURIComponent(
+              '"' + a.title.replace(/[:"«»]/g, ' ').trim().slice(0, 70) + '" ' + a.source
+            )}`;
           }
           if (!a.imageUrl || seenImgs.has(a.imageUrl)) {
-            const unique = getUniqueArticleImageUrl(a.title, a.source, a.topicTitle, cleanSourceUrl, undefined, true);
+            const unique = getUniqueArticleImageUrl(
+              a.title,
+              a.source,
+              a.topicTitle,
+              cleanSourceUrl,
+              undefined,
+              true
+            );
             seenImgs.add(unique);
             return { ...a, sourceUrl: cleanSourceUrl, imageUrl: unique };
           }
           seenImgs.add(a.imageUrl);
           return { ...a, sourceUrl: cleanSourceUrl };
         });
+
+        localStorage.setItem('veillepulse_alerts', JSON.stringify(normalizedClean));
+        return normalizedClean;
       }
-      const normalizedInitial = INITIAL_ALERTS.map(normalizeAlertTopic);
+
+      // If version changed or first load: take initial alerts, purge duplicates and synthetics
+      const cleanInitial = purgeDuplicateAlerts(INITIAL_ALERTS.map(normalizeAlertTopic));
       localStorage.setItem('veillepulse_alerts_version', CURRENT_VERSION);
-      localStorage.setItem('veillepulse_alerts', JSON.stringify(normalizedInitial));
-      return normalizedInitial;
+      localStorage.setItem('veillepulse_alerts', JSON.stringify(cleanInitial));
+      return cleanInitial;
     } catch {
-      return INITIAL_ALERTS.map(normalizeAlertTopic);
+      return purgeDuplicateAlerts(INITIAL_ALERTS.map(normalizeAlertTopic));
     }
   });
 
@@ -400,18 +412,13 @@ export default function App() {
       return [];
     }
 
-    // Filter out duplicates based on title similarity and URL
+    // Filter out duplicates based on semantic similarity, normalized titles and canonical URLs
     const newUniqueAlerts = result.alerts.filter(
-      (newA) =>
-        !listToCompare.some(
-          (existing) =>
-            existing.title.toLowerCase().trim() === newA.title.toLowerCase().trim() ||
-            (existing.sourceUrl && newA.sourceUrl && existing.sourceUrl === newA.sourceUrl)
-        )
+      (newA) => !isDuplicateInCollection(newA, listToCompare)
     );
 
     // Guarantee that every single new alert has a unique, high-definition image
-    return newUniqueAlerts.map((a) => ({
+    return purgeDuplicateAlerts(newUniqueAlerts).map((a) => ({
       ...a,
       imageUrl: getUniqueArticleImageUrl(a.title, a.source, a.topicTitle, a.sourceUrl, a.imageUrl, true),
     }));
@@ -457,8 +464,8 @@ export default function App() {
           }
         }
 
-        // Update alerts state
-        setAlerts((prev) => [...updatedWithEmailFlags, ...prev]);
+        // Update alerts state with strict deduplication
+        setAlerts((prev) => purgeDuplicateAlerts([...updatedWithEmailFlags, ...prev]));
 
         // Update topic stats
         setTopics((prev) =>
@@ -523,11 +530,8 @@ export default function App() {
           if (newAlerts.length > 0) {
             const strictlyUnique = newAlerts.filter(
               (na) =>
-                !allNewAlerts.some(
-                  (existing) =>
-                    existing.title.toLowerCase().trim() === na.title.toLowerCase().trim() ||
-                    (existing.sourceUrl && na.sourceUrl && existing.sourceUrl === na.sourceUrl)
-                )
+                !isDuplicateInCollection(na, combinedList) &&
+                !isDuplicateInCollection(na, allNewAlerts)
             );
             allNewAlerts = [...allNewAlerts, ...strictlyUnique];
             topicCounts[topic.id] = strictlyUnique.length;
@@ -568,9 +572,9 @@ export default function App() {
           }
         }
 
-        // Prepend new alerts normalized strictly
+        // Prepend new alerts normalized and purged of any duplicates
         const normalizedNew = updatedWithEmailFlags.map(normalizeAlertTopic);
-        setAlerts((prev) => [...normalizedNew, ...prev]);
+        setAlerts((prev) => purgeDuplicateAlerts([...normalizedNew, ...prev]));
 
         // Update topics stats
         setTopics((prev) =>
@@ -963,10 +967,10 @@ export default function App() {
     showToast(`Interrogation directe de "${source.name}" en cours...`, 'info');
 
     try {
-      const result = await scanSourceWithServer(source, topics);
+      const result = await scanSourceWithServer(source, topics, alerts);
       if (result.success && result.alerts.length > 0) {
         const newUnique = result.alerts.filter(
-          (newA) => !alerts.some((existing) => existing.title === newA.title)
+          (newA) => !isDuplicateInCollection(newA, alerts)
         );
 
         if (newUnique.length > 0) {
@@ -990,7 +994,7 @@ export default function App() {
           }
 
           const normalizedSingleSourceAlerts = updatedWithEmailFlags.map(normalizeAlertTopic);
-          setAlerts((prev) => [...normalizedSingleSourceAlerts, ...prev]);
+          setAlerts((prev) => purgeDuplicateAlerts([...normalizedSingleSourceAlerts, ...prev]));
 
           setSources((prev) =>
             prev.map((s) =>
