@@ -129,7 +129,7 @@ export default function App() {
   // Alerts state (with verified real links, breaking student protest coverage, and Ground News standard colors)
   const [alerts, setAlerts] = useState<NewsAlert[]>(() => {
     try {
-      const CURRENT_VERSION = 'v37_strict_dedup_purge_synthetics_alterecho_rtbf';
+      const CURRENT_VERSION = 'v40_strict_dedup_and_far_right_far_left_authentic_scan';
       const version = localStorage.getItem('veillepulse_alerts_version');
       const saved = localStorage.getItem('veillepulse_alerts');
 
@@ -289,12 +289,12 @@ export default function App() {
   const [sources, setSources] = useState<WatchSource[]>(() => {
     try {
       const version = localStorage.getItem('veillepulse_sources_version');
-      const saved = localStorage.getItem('veillepulse_sources_v15');
-      if (saved && version === 'v15_130plus_balanced_sources_youtube_social_textures_1h_scan') {
+      const saved = localStorage.getItem('veillepulse_sources_v40');
+      if (saved && version === 'v40_150_sources_extreme_droite_gauche_radicale_balance') {
         return JSON.parse(saved);
       }
-      localStorage.setItem('veillepulse_sources_version', 'v15_130plus_balanced_sources_youtube_social_textures_1h_scan');
-      localStorage.setItem('veillepulse_sources_v15', JSON.stringify(DEFAULT_SOURCES));
+      localStorage.setItem('veillepulse_sources_version', 'v40_150_sources_extreme_droite_gauche_radicale_balance');
+      localStorage.setItem('veillepulse_sources_v40', JSON.stringify(DEFAULT_SOURCES));
       return DEFAULT_SOURCES;
     } catch {
       return DEFAULT_SOURCES;
@@ -407,7 +407,8 @@ export default function App() {
   // Core Topic Scanner (performs fetch, deduping against existing alerts, and assigns guaranteed unique images)
   const runTopicScanCore = async (topic: WatchTopic, currentAlertsList?: NewsAlert[]): Promise<NewsAlert[]> => {
     const listToCompare = currentAlertsList || alerts;
-    const result = await scanTopicWithServer(topic, listToCompare);
+    const activeSources = sources.filter((s) => s.isActive);
+    const result = await scanTopicWithServer(topic, listToCompare, activeSources);
     if (!result.success || !result.alerts || result.alerts.length === 0) {
       return [];
     }
@@ -956,8 +957,8 @@ export default function App() {
 
   const handleResetSourcesToDefaults = () => {
     setSources(DEFAULT_SOURCES);
-    localStorage.setItem('veillepulse_sources_version', 'v15_130plus_balanced_sources_youtube_social_textures_1h_scan');
-    localStorage.setItem('veillepulse_sources_v15', JSON.stringify(DEFAULT_SOURCES));
+    localStorage.setItem('veillepulse_sources_version', 'v40_150_sources_extreme_droite_gauche_radicale_balance');
+    localStorage.setItem('veillepulse_sources_v40', JSON.stringify(DEFAULT_SOURCES));
     showToast(`Répertoire de presse et vigies réinitialisé avec succès (${DEFAULT_SOURCES.length} sources équilibrées).`, 'success');
   };
 
@@ -1220,6 +1221,21 @@ export default function App() {
               }}
               onDeleteSource={handleDeleteSource}
               onResetToDefaults={handleResetSourcesToDefaults}
+              onActivateOnlySources={(ids) => {
+                setSources((prev) =>
+                  prev.map((s) => ({ ...s, isActive: ids.includes(s.id) }))
+                );
+                showToast(`Sélection activée (${ids.length} source(s) active(s)).`, 'info');
+              }}
+              onSetAllSourcesActive={(active) => {
+                setSources((prev) =>
+                  prev.map((s) => ({ ...s, isActive: active }))
+                );
+                showToast(
+                  active ? 'Toutes les sources sont activées.' : 'Toutes les sources sont désactivées.',
+                  'info'
+                );
+              }}
               scanningSourceId={scanningSourceId}
             />
           </div>

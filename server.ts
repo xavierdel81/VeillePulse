@@ -991,13 +991,15 @@ app.post('/api/scan-topic', async (req: Request, res: Response) => {
       }
     }
 
-    // Also enrich with articles from RTBF live stream and independent media network
+    // Also enrich with articles from RTBF, independent media, and right-wing / alternative feeds (pluralisme intégral)
     try {
-      const [rtbfItems, bastaItems, chronikItems, matribuneItems] = await Promise.allSettled([
+      const [rtbfItems, bastaItems, chronikItems, matribuneItems, bvoltaireItems, breizhItems] = await Promise.allSettled([
         fetchDirectRssFeed('https://rss.rtbf.be/article/rss/highlight_rtbf_info.xml', 20),
         fetchDirectRssFeed('https://portail.basta.media/spip.php?page=backend', 6),
         fetchDirectRssFeed('https://www.chronik.be/feed/', 4),
         fetchDirectRssFeed('https://matribune.be/feed/', 4),
+        fetchDirectRssFeed('https://bvoltaire.fr/feed/', 6),
+        fetchDirectRssFeed('https://www.breizh-info.com/feed/', 6),
       ]);
 
       const candidateFeeds: any[] = [];
@@ -1007,6 +1009,8 @@ app.post('/api/scan-topic', async (req: Request, res: Response) => {
       if (bastaItems.status === 'fulfilled') candidateFeeds.push(...bastaItems.value);
       if (chronikItems.status === 'fulfilled') candidateFeeds.push(...chronikItems.value.map((c: any) => ({ ...c, creator: 'Chronik (chronik.be)' })));
       if (matribuneItems.status === 'fulfilled') candidateFeeds.push(...matribuneItems.value.map((m: any) => ({ ...m, creator: 'Ma Tribune (matribune.be)' })));
+      if (bvoltaireItems.status === 'fulfilled') candidateFeeds.push(...bvoltaireItems.value.map((v: any) => ({ ...v, creator: 'Boulevard Voltaire' })));
+      if (breizhItems.status === 'fulfilled') candidateFeeds.push(...breizhItems.value.map((b: any) => ({ ...b, creator: 'Breizh-Info' })));
 
       for (const b of candidateFeeds) {
         const titleLower = (b.title || '').toLowerCase();

@@ -23,6 +23,7 @@ import {
 import {
   getPoliticalLeaningMeta,
   getChannelBadge,
+  getEffectivePoliticalLeaning,
 } from '../utils/politicalLeaning';
 
 interface SourceManagerProps {
@@ -33,6 +34,8 @@ interface SourceManagerProps {
   onEditSource: (source: WatchSource) => void;
   onDeleteSource: (id: string) => void;
   onResetToDefaults: () => void;
+  onActivateOnlySources?: (ids: string[]) => void;
+  onSetAllSourcesActive?: (active: boolean) => void;
   scanningSourceId?: string | null;
 }
 
@@ -44,6 +47,8 @@ export const SourceManager: React.FC<SourceManagerProps> = ({
   onEditSource,
   onDeleteSource,
   onResetToDefaults,
+  onActivateOnlySources,
+  onSetAllSourcesActive,
   scanningSourceId,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,8 +82,25 @@ export const SourceManager: React.FC<SourceManagerProps> = ({
     }
 
     // Political Leaning filter
-    if (selectedLeaning !== 'all' && source.politicalLeaning !== selectedLeaning) {
-      return false;
+    if (selectedLeaning !== 'all') {
+      const eff = getEffectivePoliticalLeaning(source.name, source.politicalLeaning, source.url);
+      if (selectedLeaning === 'extreme_droite') {
+        if (source.politicalLeaning !== 'extreme_droite' && eff !== 'extreme_droite') {
+          return false;
+        }
+        if (eff === 'centre' || eff === 'gauche' || eff === 'gauche_radicale') {
+          return false;
+        }
+      } else if (selectedLeaning === 'gauche_radicale') {
+        if (source.politicalLeaning !== 'gauche_radicale' && eff !== 'gauche_radicale') {
+          return false;
+        }
+        if (eff === 'droite' || eff === 'extreme_droite' || eff === 'centre') {
+          return false;
+        }
+      } else if (source.politicalLeaning !== selectedLeaning && eff !== selectedLeaning) {
+        return false;
+      }
     }
 
     // Search query
@@ -387,6 +409,44 @@ export const SourceManager: React.FC<SourceManagerProps> = ({
               <option value="citoyen_local">Médias Citoyens & Réseau</option>
               <option value="analyse_critique">Auto-Défense Intellectuelle</option>
             </select>
+          </div>
+        </div>
+
+        {/* Quick Batch Selection Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-slate-600">
+              {filteredSources.length} source(s) affichée(s) :
+            </span>
+            {onActivateOnlySources && filteredSources.length > 0 && (
+              <button
+                onClick={() => onActivateOnlySources(filteredSources.map((s) => s.id))}
+                className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 font-bold transition flex items-center gap-1 shadow-2xs"
+                title="Active uniquement les sources affichées et désactive toutes les autres"
+              >
+                <Zap className="w-3.5 h-3.5 text-blue-600" />
+                <span>Activer uniquement cette sélection ({filteredSources.length})</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {onSetAllSourcesActive && (
+              <>
+                <button
+                  onClick={() => onSetAllSourcesActive(true)}
+                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition"
+                >
+                  Tout activer
+                </button>
+                <button
+                  onClick={() => onSetAllSourcesActive(false)}
+                  className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition"
+                >
+                  Tout désactiver
+                </button>
+              </>
+            )}
           </div>
         </div>
 

@@ -312,11 +312,31 @@ function getCuratedPluralistSignalsForTopic(topicId: string): ParsedRssItem[] {
         storyClusterId: 'cluster-manif-eleves-liege',
         storyClusterTitle: 'Mobilisation des élèves & Manifestations étudiantes en Wallonie',
       },
+      // 8. EXTRÊME DROITE (BLEU NUIT TRÈS FONCÉ) : Frontières (ex-Livre Noir)
+      {
+        title: 'Frontières : Débordements lors des blocages de lycées : riverains et commerçants exaspérés par l\'inaction publique',
+        link: 'https://frontieresmedia.fr',
+        source: 'Frontières (ex-Livre Noir)',
+        summary: 'Reportage et entretiens auprès des commerçants et riverains affectés par les dégradations en marge des cortèges scolaires. Frontières dénonce le laxisme des autorités locales face aux blocages illégaux et le coût direct supporté par les contribuables.',
+        forcedLeaning: 'extreme_droite',
+        storyClusterId: 'cluster-manif-eleves-liege',
+        storyClusterTitle: 'Mobilisation des élèves & Manifestations étudiantes en Wallonie',
+      },
     ];
   }
 
   if (topicId === 'topic-corruption') {
     return [
+      // GAUCHE RADICALE (ROUGE FONCÉ) : Blast
+      {
+        title: 'Blast : Cabinets de conseil et dépeçage de l\'État : comment des milliards d\'argent public sont siphonnés',
+        link: 'https://www.blast-info.fr/',
+        source: 'Blast, le souffle de l\'info',
+        summary: 'Enquête de contre-pouvoir de Denis Robert : collusion institutionnelle entre ministères et cabinets de conseil privés, surfacturation de missions sans appel d\'offres et perte de souveraineté administrative.',
+        forcedLeaning: 'gauche_radicale',
+        storyClusterId: 'cluster-corruption-marches',
+        storyClusterTitle: 'Marchés publics, intercommunales wallonnes & corruption',
+      },
       // GAUCHE (ROUGE) : Mediapart & Médor
       {
         title: 'Mediapart : Marchés publics, cabinets de conseil et filiales opaques : révélations d\'enquête',
@@ -334,6 +354,16 @@ function getCuratedPluralistSignalsForTopic(topicId: string): ParsedRssItem[] {
         source: 'L\'Écho',
         summary: 'Rapport d\'analyse financière sur les holdings intercommunaux wallons : les commissaires aux comptes exigent une rationalisation des filiales et une refonte des rémunérations de direction.',
         forcedLeaning: 'droite',
+        storyClusterId: 'cluster-corruption-marches',
+        storyClusterTitle: 'Marchés publics, intercommunales wallonnes & corruption',
+      },
+      // EXTRÊME DROITE (BLEU NUIT TRÈS FONCÉ) : Boulevard Voltaire
+      {
+        title: 'Boulevard Voltaire : Gabegie des subventions publiques et népotisme : les contribuables pressurés par l\'opacité administrative',
+        link: 'https://bvoltaire.fr',
+        source: 'Boulevard Voltaire',
+        summary: 'Enquête ciblant l\'attribution opaque de subventions publiques à des structures politisées sans évaluation des résultats : dénonciation du gaspillage de l\'argent des contribuables et des connivences partisanes.',
+        forcedLeaning: 'extreme_droite',
         storyClusterId: 'cluster-corruption-marches',
         storyClusterTitle: 'Marchés publics, intercommunales wallonnes & corruption',
       },
@@ -372,6 +402,16 @@ function getCuratedPluralistSignalsForTopic(topicId: string): ParsedRssItem[] {
         storyClusterId: 'cluster-cada-transparence',
         storyClusterTitle: 'Transparence administrative CADA & accès aux délibérations',
       },
+      // EXTRÊME DROITE (BLEU NUIT TRÈS FONCÉ) : Breizh-Info
+      {
+        title: 'Breizh-Info : Refus d\'accès aux comptes administratifs : quand les exécutifs locaux verrouillent les pièces comptables',
+        link: 'https://www.breizh-info.com',
+        source: 'Breizh-Info (Presse Indépendante Souverainiste)',
+        summary: 'Enquête sur l\'opacité des collectivités locales face aux demandes de citoyens et d\'élus d\'opposition : dénonciation des blocages administratifs visant à dissimuler l\'endettement et les dépenses somptuaires.',
+        forcedLeaning: 'extreme_droite',
+        storyClusterId: 'cluster-cada-transparence',
+        storyClusterTitle: 'Transparence administrative CADA & accès aux délibérations',
+      },
       // DROITE (BLEU) : L'Avenir
       {
         title: 'L\'Avenir : Délibérations communales et transparence : la majorité présente son nouveau portail open data',
@@ -404,6 +444,16 @@ function getCuratedPluralistSignalsForTopic(topicId: string): ParsedRssItem[] {
         source: 'Ligue des Droits Humains',
         summary: 'Rapport d\'analyse juridique alertant sur l\'extension des pouvoirs de police municipale (SAC) et la restriction progressive des espaces d\'expression citoyenne.',
         forcedLeaning: 'gauche',
+        storyClusterId: 'cluster-democratie-libertes',
+        storyClusterTitle: 'Démocratie locale, libertés publiques & contestation citoyenne',
+      },
+      // EXTRÊME DROITE (BLEU NUIT TRÈS FONCÉ) : TV Libertés
+      {
+        title: 'TV Libertés : Dérives technocratiques et censure numérique : les libertés fondamentales face au contrôle d\'État',
+        link: 'https://www.youtube.com/@TVLibertes',
+        source: 'TV Libertés (TVL)',
+        summary: 'Analyse souverainiste décortiquant les réglementations européennes sur le filtrage des plateformes et les atteintes à la liberté d\'expression citoyenne.',
+        forcedLeaning: 'extreme_droite',
         storyClusterId: 'cluster-democratie-libertes',
         storyClusterTitle: 'Démocratie locale, libertés publiques & contestation citoyenne',
       },
@@ -442,6 +492,16 @@ function getCuratedPluralistSignalsForTopic(topicId: string): ParsedRssItem[] {
       storyClusterId: 'cluster-esprit-critique',
       storyClusterTitle: 'Zététique, auto-défense intellectuelle & décodage des sophismes',
     },
+    // EXTRÊME DROITE (BLEU NUIT TRÈS FONCÉ) : Éléments
+    {
+      title: 'Éléments : Tyrannie des récits médiatiques et fabrique du consentement : décryptage des biais des fact-checkers officiels',
+      link: 'https://revue-elements.com',
+      source: 'Éléments (Revue des idées contemporaines)',
+      summary: 'Essai critique analysant le rôle idéologique des cellules de fact-checking des grands médias : examen du traitement asymétrique de l\'information et de la police de la pensée.',
+      forcedLeaning: 'extreme_droite',
+      storyClusterId: 'cluster-esprit-critique',
+      storyClusterTitle: 'Zététique, auto-défense intellectuelle & décodage des sophismes',
+    },
     // CENTRE (GRIS) : Defakator
     {
       title: 'Defakator : Complotisme, trucages visuels et fake news : autopsie d\'une manipulation virale',
@@ -466,44 +526,80 @@ function getCuratedPluralistSignalsForTopic(topicId: string): ParsedRssItem[] {
 }
 
 /**
- * Scan topic directly on the client side with balanced pluralism (Gauche, Droite, Centre) and zero duplicates
+ * Scan topic directly on the client side with balanced pluralism (Gauche, Droite, Centre, Extrême droite, Gauche radicale)
+ * and strict respect of user-selected active sources with zero duplicate publications
  */
 export async function scanTopicClientSide(
   topic: WatchTopic,
-  existingAlerts: NewsAlert[] = []
+  existingAlerts: NewsAlert[] = [],
+  activeSources?: WatchSource[]
 ): Promise<NewsAlert[]> {
   const currentYear = new Date().getFullYear();
+
+  // 1. Gather curated pluralist items specifically for this topic
+  let candidateItems: ParsedRssItem[] = getCuratedPluralistSignalsForTopic(topic.id);
+
+  // Check user active sources & leanings
+  const hasActiveSourcesFilter = Boolean(activeSources && activeSources.length > 0);
+  const activeLeanings = hasActiveSourcesFilter
+    ? new Set(activeSources!.map((s) => s.politicalLeaning || getEffectivePoliticalLeaning(s.name, s.politicalLeaning, s.url)))
+    : new Set<PoliticalLeaning>();
+  const activeNames = hasActiveSourcesFilter
+    ? activeSources!.map((s) => s.name.toLowerCase().trim())
+    : [];
+
+  const isOnlyExtremeRight = hasActiveSourcesFilter && activeLeanings.size === 1 && activeLeanings.has('extreme_droite');
+  const isOnlyRadicalLeft = hasActiveSourcesFilter && activeLeanings.size === 1 && activeLeanings.has('gauche_radicale');
+
   const existingTitles = new Set(existingAlerts.map((a) => a.title.toLowerCase().trim()));
   const existingUrls = new Set(existingAlerts.map((a) => (a.sourceUrl || '').trim()).filter(Boolean));
 
-  // 1. Gather curated pluralist items specifically for this topic
-  const candidateItems: ParsedRssItem[] = getCuratedPluralistSignalsForTopic(topic.id);
-
   // 2. Also try live RSS search specifically for this topic (if network / CORS allows)
-  try {
-    let specificQuery = '';
-    if (topic.id === 'topic-luttes-sociales') {
-      specificQuery = 'manifestations lycéens Liege Wallonie Belgique';
-    } else if (topic.id === 'topic-corruption') {
-      specificQuery = 'corruption marches publics intercommunales Wallonie';
-    } else if (topic.id === 'topic-transparence') {
-      specificQuery = 'CADA recours Transparencia Wallonie';
-    }
+  // Skip generic mainstream search if user strictly wants ONLY extreme right or ONLY radical left!
+  if (!isOnlyExtremeRight && !isOnlyRadicalLeft) {
+    try {
+      let specificQuery = '';
+      if (topic.id === 'topic-luttes-sociales') {
+        specificQuery = 'manifestations lycéens Liege Wallonie Belgique';
+      } else if (topic.id === 'topic-corruption') {
+        specificQuery = 'corruption marches publics intercommunales Wallonie';
+      } else if (topic.id === 'topic-transparence') {
+        specificQuery = 'CADA recours Transparencia Wallonie';
+      }
 
-    if (specificQuery) {
-      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(specificQuery)}&hl=fr&gl=BE&ceid=BE:fr`;
-      const xml = await fetchViaCorsProxy(rssUrl, 3000);
-      if (xml) {
-        const liveItems = parseRssXml(xml);
-        for (const item of liveItems) {
-          if (!candidateItems.some((c) => c.title === item.title)) {
-            candidateItems.push(item);
+      if (specificQuery) {
+        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(specificQuery)}&hl=fr&gl=BE&ceid=BE:fr`;
+        const xml = await fetchViaCorsProxy(rssUrl, 3000);
+        if (xml) {
+          const liveItems = parseRssXml(xml);
+          for (const item of liveItems) {
+            if (!candidateItems.some((c) => c.title === item.title)) {
+              candidateItems.push(item);
+            }
           }
         }
       }
+    } catch {
+      // quiet fallback
     }
-  } catch {
-    // quiet fallback
+  }
+
+  // Filter candidates if user explicitly enabled only a subset of sources/leanings
+  if (hasActiveSourcesFilter) {
+    if (isOnlyExtremeRight) {
+      candidateItems = candidateItems.filter((c) => c.forcedLeaning === 'extreme_droite');
+    } else if (isOnlyRadicalLeft) {
+      candidateItems = candidateItems.filter((c) => c.forcedLeaning === 'gauche_radicale');
+    } else if (activeSources!.length < 40) {
+      const filtered = candidateItems.filter((c) => {
+        const cSource = (c.source || '').toLowerCase().trim();
+        const pol = c.forcedLeaning || inferPoliticalLeaningFromSource(c.source || '', c.link);
+        return activeLeanings.has(pol) || activeNames.some((n) => cSource.includes(n) || n.includes(cSource));
+      });
+      if (filtered.length > 0) {
+        candidateItems = filtered;
+      }
+    }
   }
 
   // 3. Format into NewsAlert objects, enforcing balance and strict deduplication

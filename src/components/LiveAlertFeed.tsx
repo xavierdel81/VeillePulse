@@ -377,6 +377,12 @@ export const LiveAlertFeed: React.FC<LiveAlertFeedProps> = ({
     if (leaningFilter !== 'all') {
       list = list.filter((a) => {
         const eff = getEffectivePoliticalLeaning(a.source, a.politicalLeaning, a.sourceUrl);
+        if (leaningFilter === 'gauche_radicale') {
+          return eff === 'gauche_radicale';
+        }
+        if (leaningFilter === 'extreme_droite') {
+          return eff === 'extreme_droite';
+        }
         if (leaningFilter === 'gauche') {
           return eff === 'gauche' || eff === 'gauche_radicale';
         }
@@ -579,6 +585,19 @@ export const LiveAlertFeed: React.FC<LiveAlertFeedProps> = ({
             </button>
 
             <button
+              onClick={() => setLeaningFilter('gauche_radicale')}
+              title="Filtrer uniquement les médias de gauche radicale (Solidaire, Blast, Le Média, Contretemps...)"
+              className={`px-2.5 py-1.5 rounded-lg font-bold transition border flex items-center gap-1.5 ${
+                leaningFilter === 'gauche_radicale'
+                  ? 'bg-red-950 text-red-100 border-red-900 shadow-2xs'
+                  : 'bg-red-950/10 text-red-950 border-red-900/30 hover:bg-red-950/20'
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-red-900" />
+              <span>G. radicale</span>
+            </button>
+
+            <button
               onClick={() => setLeaningFilter('gauche')}
               className={`px-3 py-1.5 rounded-lg font-bold transition border flex items-center gap-1.5 ${
                 leaningFilter === 'gauche'
@@ -587,7 +606,7 @@ export const LiveAlertFeed: React.FC<LiveAlertFeedProps> = ({
               }`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-red-600" />
-              <span>Gauche (Rouge)</span>
+              <span>Gauche</span>
             </button>
 
             <button
@@ -611,7 +630,20 @@ export const LiveAlertFeed: React.FC<LiveAlertFeedProps> = ({
               }`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-              <span>Droite (Bleu)</span>
+              <span>Droite</span>
+            </button>
+
+            <button
+              onClick={() => setLeaningFilter('extreme_droite')}
+              title="Filtrer uniquement les médias d'extrême droite (Frontières, Boulevard Voltaire, TV Libertés, Breizh-Info, Éléments...)"
+              className={`px-2.5 py-1.5 rounded-lg font-bold transition border flex items-center gap-1.5 ${
+                leaningFilter === 'extreme_droite'
+                  ? 'bg-blue-950 text-blue-100 border-blue-900 shadow-2xs'
+                  : 'bg-blue-950/10 text-blue-950 border-blue-900/30 hover:bg-blue-950/20'
+              }`}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-950" />
+              <span>Extr. droite</span>
             </button>
 
             {/* Bookmarked Filter */}

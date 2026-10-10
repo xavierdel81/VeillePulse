@@ -31,14 +31,15 @@ function getStoredAlerts(): NewsAlert[] {
  */
 export async function scanTopicWithServer(
   topic: WatchTopic,
-  existingAlerts?: NewsAlert[]
+  existingAlerts?: NewsAlert[],
+  activeSources?: WatchSource[]
 ): Promise<{ success: boolean; alerts: NewsAlert[]; error?: string; isClientMode?: boolean }> {
   const currentAlerts = existingAlerts || getStoredAlerts();
 
   // If we already know the server is not available (e.g. on GitHub Pages static deployment)
   if (serverKnownUnavailable || isStaticHost()) {
     try {
-      const clientAlerts = await scanTopicClientSide(topic, currentAlerts);
+      const clientAlerts = await scanTopicClientSide(topic, currentAlerts, activeSources);
       return { success: true, alerts: clientAlerts, isClientMode: true };
     } catch (e: any) {
       console.warn('[VeillePulse] Client scanner warning:', e);
@@ -54,7 +55,7 @@ export async function scanTopicWithServer(
     const res = await fetch('/api/scan-topic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic }),
+      body: JSON.stringify({ topic, activeSources }),
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
@@ -64,7 +65,7 @@ export async function scanTopicWithServer(
       // Server returned 404 or HTML (standard for static sites like GitHub Pages)
       console.info('[VeillePulse] Serveur API indisponible (déploiement statique détecté). Activation du scanner autonome en ligne.');
       serverKnownUnavailable = true;
-      const clientAlerts = await scanTopicClientSide(topic, currentAlerts);
+      const clientAlerts = await scanTopicClientSide(topic, currentAlerts, activeSources);
       return { success: true, alerts: clientAlerts, isClientMode: true };
     }
 
@@ -75,7 +76,7 @@ export async function scanTopicWithServer(
     console.info('[VeillePulse] Erreur réseau vers /api/scan-topic, basculement vers le moteur de veille autonome en ligne :', err.message);
     serverKnownUnavailable = true;
     try {
-      const clientAlerts = await scanTopicClientSide(topic, currentAlerts);
+      const clientAlerts = await scanTopicClientSide(topic, currentAlerts, activeSources);
       return { success: true, alerts: clientAlerts, isClientMode: true };
     } catch (clientErr: any) {
       return { success: false, alerts: [], error: clientErr.message || 'Erreur lors du scan' };
