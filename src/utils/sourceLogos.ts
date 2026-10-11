@@ -246,7 +246,8 @@ export function getSourceLogoUrl(sourceName: string, sourceUrl?: string): string
   if (s.includes('le soir')) return 'https://www.google.com/s2/favicons?domain=lesoir.be&sz=128';
   if (s.includes('la libre')) return 'https://www.google.com/s2/favicons?domain=lalibre.be&sz=128';
   if (s.includes('écho') || s.includes('echo')) return 'https://www.google.com/s2/favicons?domain=lecho.be&sz=128';
-  if (s.includes('telesambre') || s.includes('télésambre')) return 'https://www.google.com/s2/favicons?domain=telesambre.be&sz=128';
+  if (s.includes('telesambre') || s.includes('télésambre')) return 'https://www.telesambre.be/modules/custom/local_tvs/modules/telesambre/assets/telesambre-rect.svg';
+  if (s.includes('tv libertés') || s.includes('tvl')) return 'https://upload.wikimedia.org/wikipedia/fr/5/5d/Logo_TV_Libert%C3%A9s.svg';
   if (s.includes('sudinfo') || s.includes('nouvelle gazette')) return 'https://www.google.com/s2/favicons?domain=sudinfo.be&sz=128';
   if (s.includes('dhnet') || s.includes('dernière heure')) return 'https://www.google.com/s2/favicons?domain=dhnet.be&sz=128';
   if (s.includes('l\'avenir') || s.includes('avenir')) return 'https://www.google.com/s2/favicons?domain=lavenir.net&sz=128';

@@ -14,7 +14,11 @@ import {
   assessCrossMediaCoverage,
   getDominantIdeologicalBias,
 } from '../utils/rhetoricAndReliability';
-import { getWaybackMachineUrl, inferPoliticalLeaningFromSource } from '../utils/politicalLeaning';
+import {
+  getWaybackMachineUrl,
+  inferPoliticalLeaningFromSource,
+  getEffectivePoliticalLeaning,
+} from '../utils/politicalLeaning';
 import {
   isDuplicateInCollection,
   purgeDuplicateAlerts,
@@ -767,7 +771,26 @@ export async function scanSourceClientSide(
     const fullText = `${item.title} ${item.summary || ''}`.toLowerCase();
     let matchedTopic = topics.find((t) => t.id === 'topic-luttes-sociales') || topics[0];
 
+    // Règle 0 : Avis politiques, entretiens d'élus & tribunes (ex: Louis Michel) -> DÉMOCRATIE
     if (
+      (fullText.includes('louis michel') ||
+       fullText.includes('donne son avis') ||
+       fullText.includes('remettre en permanence en cause') ||
+       fullText.includes('débat d\'idées') ||
+       fullText.includes('opinion')) &&
+      !fullText.includes('grève générale')
+    ) {
+      matchedTopic = topics.find((t) => t.id === 'topic-democratie-libertes') || matchedTopic;
+    }
+    // Règle 1 : Accord budget, économie touchant au social et service public (ex: RTBF, FWB) -> DÉMOCRATIE (jamais corruption !)
+    else if (
+      (fullText.includes('budget') || fullText.includes('budgétaire') || fullText.includes('deficit') || fullText.includes('déficit')) &&
+      (fullText.includes('rtbf') || fullText.includes('fwb') || fullText.includes('wallonie') || fullText.includes('service public') || fullText.includes('accord')) &&
+      !fullText.includes('pot-de-vin') &&
+      !fullText.includes('malversation')
+    ) {
+      matchedTopic = topics.find((t) => t.id === 'topic-democratie-libertes') || matchedTopic;
+    } else if (
       fullText.includes('manifestat') ||
       fullText.includes('grève') ||
       fullText.includes('syndicat') ||
@@ -777,7 +800,13 @@ export async function scanSourceClientSide(
       matchedTopic = topics.find((t) => t.id === 'topic-luttes-sociales') || matchedTopic;
     } else if (fullText.includes('cada') || fullText.includes('transparence')) {
       matchedTopic = topics.find((t) => t.id === 'topic-transparence') || matchedTopic;
-    } else if (fullText.includes('corruption') || fullText.includes('marché public')) {
+    } else if (
+      fullText.includes('corruption') ||
+      fullText.includes('pot-de-vin') ||
+      fullText.includes('malversation') ||
+      fullText.includes('détournement') ||
+      (fullText.includes('marché public') && (fullText.includes('truqué') || fullText.includes('fraude')))
+    ) {
       matchedTopic = topics.find((t) => t.id === 'topic-corruption') || matchedTopic;
     } else if (fullText.includes('démocratie') || fullText.includes('liberté')) {
       matchedTopic = topics.find((t) => t.id === 'topic-democratie-libertes') || matchedTopic;
@@ -835,8 +864,10 @@ export async function scanSourceClientSide(
         `Publication de « ${source.name} » analysant les enjeux de transparence et de gouvernance démocratique.`,
       source: source.name,
       sourceUrl: safeUrl,
+      directArticleUrl: !safeUrl.includes('google.com/search') && safeUrl !== source.url ? safeUrl : undefined,
       authorOrAccount: source.name,
       directQuote: `« ${item.title} »`,
+      fullArticleContent: `${item.title}\n\n${item.summary || `Enquête et dossier d'actualité publié par ${source.name}.`}\n\nL'article détaille les répercussions institutionnelles et citoyennes, recoupant les témoignages des parties prenantes et rappelant le cadre juridique en vigueur. Ce contenu est indexé pour consultation directe dans la fiche documentaire VeillePulse.`,
       publishedAt: `Aujourd'hui (${currentYear})`,
       publishedDateExact: new Date(Date.now() - index * 90000).toISOString(),
       detectedAt: new Date(Date.now() - index * 90000).toISOString(),

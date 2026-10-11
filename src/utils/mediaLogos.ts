@@ -143,6 +143,65 @@ export const MEDIA_REGISTRY: Record<string, {
     brandColor: '#3B82F6',
     textColor: '#FFFFFF',
   },
+  'télésambre': {
+    domain: 'telesambre.be',
+    shortName: 'Télésambre',
+    brandColor: '#E30613',
+    textColor: '#FFFFFF',
+    customLogoUrl: 'https://www.telesambre.be/modules/custom/local_tvs/modules/telesambre/assets/telesambre-rect.svg',
+  },
+  'telesambre': {
+    domain: 'telesambre.be',
+    shortName: 'Télésambre',
+    brandColor: '#E30613',
+    textColor: '#FFFFFF',
+    customLogoUrl: 'https://www.telesambre.be/modules/custom/local_tvs/modules/telesambre/assets/telesambre-rect.svg',
+  },
+  'tv libertés': {
+    domain: 'tvlibertes.com',
+    shortName: 'TV Libertés',
+    brandColor: '#003366',
+    textColor: '#FFFFFF',
+    customLogoUrl: 'https://upload.wikimedia.org/wikipedia/fr/5/5d/Logo_TV_Libert%C3%A9s.svg',
+  },
+  'tv libertés (tvl)': {
+    domain: 'tvlibertes.com',
+    shortName: 'TVL',
+    brandColor: '#003366',
+    textColor: '#FFFFFF',
+    customLogoUrl: 'https://upload.wikimedia.org/wikipedia/fr/5/5d/Logo_TV_Libert%C3%A9s.svg',
+  },
+  'tvl': {
+    domain: 'tvlibertes.com',
+    shortName: 'TVL',
+    brandColor: '#003366',
+    textColor: '#FFFFFF',
+    customLogoUrl: 'https://upload.wikimedia.org/wikipedia/fr/5/5d/Logo_TV_Libert%C3%A9s.svg',
+  },
+  'frontières': {
+    domain: 'frontieresmedia.fr',
+    shortName: 'Frontières',
+    brandColor: '#1E293B',
+    textColor: '#FFFFFF',
+  },
+  'boulevard voltaire': {
+    domain: 'bvoltaire.fr',
+    shortName: 'B. Voltaire',
+    brandColor: '#0F172A',
+    textColor: '#FFFFFF',
+  },
+  'breizh-info': {
+    domain: 'breizh-info.com',
+    shortName: 'Breizh-Info',
+    brandColor: '#000000',
+    textColor: '#FFFFFF',
+  },
+  'éléments': {
+    domain: 'revue-elements.com',
+    shortName: 'Éléments',
+    brandColor: '#172554',
+    textColor: '#FFFFFF',
+  },
 
   // French Investigative & Independent Media
   'mediapart': {

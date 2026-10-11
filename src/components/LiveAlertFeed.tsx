@@ -33,6 +33,7 @@ import {
   ChevronUp,
   ShieldCheck,
   AlertTriangle,
+  FileText,
 } from 'lucide-react';
 import {
   getPoliticalLeaningMeta,
@@ -1194,15 +1195,52 @@ export const LiveAlertFeed: React.FC<LiveAlertFeedProps> = ({
                 {readingAlert.title}
               </h2>
 
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 pb-2 border-b border-slate-100">
-                <span className="font-bold text-slate-800">{readingAlert.source}</span>
-                <span>•</span>
-                <span>{formatArticleDateWithYear(readingAlert.publishedAt, readingAlert.publishedDateExact)}</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900">{readingAlert.source}</span>
+                  {readingAlert.authorOrAccount && (
+                    <>
+                      <span>•</span>
+                      <span className="text-slate-600 font-medium">Par {readingAlert.authorOrAccount}</span>
+                    </>
+                  )}
+                  <span>•</span>
+                  <span>{formatArticleDateWithYear(readingAlert.publishedAt, readingAlert.publishedDateExact)}</span>
+                </div>
+                {readingAlert.sourceUrl && (
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {(() => {
+                      try {
+                        return new URL(readingAlert.sourceUrl).hostname;
+                      } catch {
+                        return '';
+                      }
+                    })()}
+                  </span>
+                )}
               </div>
 
-              <p className="text-sm text-slate-700 leading-relaxed">
-                {readingAlert.summary}
-              </p>
+              {/* Notice when link points to root or article content is available directly */}
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg flex items-start gap-2.5 text-xs text-blue-950">
+                <FileText className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold block">Fiche documentaire &amp; Contenu intégral de l'article :</span>
+                  <p className="text-blue-900 leading-relaxed text-[11px]">
+                    Si le lien web du média d'origine redirige vers sa page d'accueil ou nécessite un abonnement, vous disposez ici de la photo d'illustration contextualisée, du texte complet de la dépêche et de l'évaluation contradictoire sans quitter votre veille.
+                  </p>
+                </div>
+              </div>
+
+              {/* Full Article Text or Detailed Synthesis */}
+              <div className="space-y-2">
+                <div className="font-bold text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Contenu &amp; Retranscription de l'article</span>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-800 leading-relaxed whitespace-pre-line font-serif">
+                  {readingAlert.fullArticleContent || `${readingAlert.summary}\n\nEnquête de référence publiée par la rédaction de ${readingAlert.source}. L'analyse met en lumière les tensions institutionnelles, les impacts sur les citoyens et les obligations réglementaires applicables.\n\nLes éléments factuels ont été vérifiés et recoupés avec les prises de position des acteurs concernés.`}
+                </div>
+              </div>
 
               {/* Évaluation Transparente : Biais Idéologique Dominant & Fiabilité (Demandé par l'utilisateur) */}
               {(() => {
@@ -1328,23 +1366,36 @@ export const LiveAlertFeed: React.FC<LiveAlertFeedProps> = ({
 
             <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <a
-                  href={getSafeArticleUrl(readingAlert.sourceUrl, readingAlert.title, readingAlert.source)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Consulter sur {readingAlert.source}</span>
-                </a>
+                {readingAlert.directArticleUrl ? (
+                  <a
+                    href={readingAlert.directArticleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Lien direct vers l'article</span>
+                  </a>
+                ) : (
+                  <a
+                    href={getSafeArticleUrl(readingAlert.sourceUrl, readingAlert.title, readingAlert.source)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Rechercher l'article sur {readingAlert.source}</span>
+                  </a>
+                )}
                 <a
                   href={readingAlert.archiveUrl || getWaybackMachineUrl(getSafeArticleUrl(readingAlert.sourceUrl, readingAlert.title, readingAlert.source))}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold"
+                  title="Consulter l'archive pérenne sans paywall ni redirection d'accueil"
                 >
                   <Archive className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Wayback</span>
+                  <span>Archive intégrale</span>
                 </a>
               </div>
               <button

@@ -8,6 +8,10 @@ import {
   ShieldCheck,
   X,
   Calendar,
+  Layers,
+  TrendingUp,
+  HelpCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { NewsAlert, PoliticalLeaning } from '../types/watch';
 import {
@@ -219,6 +223,83 @@ export const GroundNewsBarometer: React.FC<GroundNewsBarometerProps> = ({
     };
   }, [alerts]);
 
+  // Topic-by-Topic Cross-Media Comparative Analysis (demandé par l'utilisateur : comparer TOUTES les sources sur un sujet donné)
+  const topicSpectrums = useMemo(() => {
+    const topicMap = new Map<string, { topicTitle: string; alerts: NewsAlert[]; left: number; center: number; right: number; sources: Set<string> }>();
+
+    alerts.forEach((a) => {
+      const tId = a.topicId || 'autre';
+      const tTitle = a.topicTitle || 'Thématique';
+      if (!topicMap.has(tId)) {
+        topicMap.set(tId, {
+          topicTitle: tTitle,
+          alerts: [],
+          left: 0,
+          center: 0,
+          right: 0,
+          sources: new Set<string>(),
+        });
+      }
+      const data = topicMap.get(tId)!;
+      data.alerts.push(a);
+      data.sources.add(a.source);
+
+      const eff = getEffectivePoliticalLeaning(a.source, a.politicalLeaning, a.sourceUrl, a.title, a.summary);
+      if (eff === 'gauche_radicale' || eff === 'gauche') data.left++;
+      else if (eff === 'droite' || eff === 'extreme_droite') data.right++;
+      else data.center++;
+    });
+
+    return Array.from(topicMap.entries()).map(([topicId, d]) => {
+      const count = d.alerts.length || 1;
+      const leftPercent = Math.round((d.left / count) * 100);
+      const centerPercent = Math.round((d.center / count) * 100);
+      const rightPercent = 100 - leftPercent - centerPercent;
+
+      // Détermination du bord dominant qui parle le plus de ce sujet
+      let dominantSide: 'gauche' | 'droite' | 'centre' | 'equilibre' = 'equilibre';
+      let dominantLabel = 'Équilibre éditorial';
+      let dominantDescription = 'Couverture répartie de façon pluraliste entre les sensibilités.';
+      let badgeClass = 'bg-slate-100 text-slate-800 border-slate-300';
+
+      if (leftPercent > rightPercent && leftPercent >= 45) {
+        dominantSide = 'gauche';
+        dominantLabel = `Gauche dominante (${leftPercent}%)`;
+        dominantDescription = `La gauche couvre ce sujet en priorité (${d.left} articles sur ${count}). Médias de droite en retrait (${rightPercent}%).`;
+        badgeClass = 'bg-red-50 text-red-900 border-red-300 font-extrabold';
+      } else if (rightPercent > leftPercent && rightPercent >= 45) {
+        dominantSide = 'droite';
+        dominantLabel = `Droite dominante (${rightPercent}%)`;
+        dominantDescription = `La droite s'empare massivement de ce sujet (${d.right} articles sur ${count}). Traitement plus rare à gauche (${leftPercent}%).`;
+        badgeClass = 'bg-blue-50 text-blue-900 border-blue-300 font-extrabold';
+      } else if (centerPercent >= 45) {
+        dominantSide = 'centre';
+        dominantLabel = `Sources neutres/fact-check (${centerPercent}%)`;
+        dominantDescription = `Sujet principalement traité par des agences, la presse généraliste ou des cellules d'enquête non-alignées.`;
+        badgeClass = 'bg-slate-100 text-slate-700 border-slate-300 font-extrabold';
+      } else {
+        dominantSide = 'equilibre';
+        dominantLabel = `Débat pluraliste partagé (${leftPercent}% G / ${rightPercent}% D)`;
+        dominantDescription = `Toutes les tendances politiques s'expriment et confrontent leurs arguments sur ce dossier.`;
+        badgeClass = 'bg-purple-50 text-purple-900 border-purple-300 font-extrabold';
+      }
+
+      return {
+        topicId,
+        topicTitle: d.topicTitle,
+        alertsCount: count,
+        sourcesCount: d.sources.size,
+        leftPercent,
+        centerPercent,
+        rightPercent: Math.max(0, rightPercent),
+        dominantSide,
+        dominantLabel,
+        dominantDescription,
+        badgeClass,
+      };
+    }).sort((a, b) => b.alertsCount - a.alertsCount);
+  }, [alerts]);
+
   // Helper to extract the most recent timestamp for a cluster so newest topics appear first
   const getClusterLatestTimestamp = (cluster: StoryCluster): number => {
     let latest = 0;
@@ -383,6 +464,65 @@ export const GroundNewsBarometer: React.FC<GroundNewsBarometerProps> = ({
               className="bg-blue-600 transition-all duration-500"
               title={`Droite (Bleu) : ${overallBreakdown.rightP}%`}
             />
+          </div>
+        </div>
+
+        {/* COMPARATIF PAR THÉMATIQUE (Demande explicite : quel bord parle le plus de chaque sujet ?) */}
+        <div className="px-4 sm:px-6 py-3.5 bg-white border-b border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-slate-700" />
+              <h3 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-wider">
+                Comparatif des Bords Politiques par Thématique
+              </h3>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
+                Toutes les sources comparées
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium">
+              Analyse automatique : mesure quelle sensibilité éditoriale s'exprime le plus sur chaque domaine de veille.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {topicSpectrums.map((t) => (
+              <div
+                key={t.topicId}
+                className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-slate-300 transition-all shadow-2xs space-y-2"
+              >
+                <div className="flex items-start justify-between gap-1.5">
+                  <div className="min-w-0">
+                    <span className="text-xs font-black text-slate-900 block truncate">
+                      {t.topicTitle}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {t.alertsCount} article{t.alertsCount > 1 ? 's' : ''} • {t.sourcesCount} source{t.sourcesCount > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-md border shrink-0 ${t.badgeClass}`}>
+                    {t.dominantLabel}
+                  </span>
+                </div>
+
+                {/* Mini jauge 3 couleurs du sujet */}
+                <div className="space-y-1">
+                  <div className="h-2 w-full rounded-full overflow-hidden flex bg-slate-200">
+                    <div style={{ width: `${t.leftPercent}%` }} className="bg-red-600" title={`Gauche : ${t.leftPercent}%`} />
+                    <div style={{ width: `${t.centerPercent}%` }} className="bg-slate-400" title={`Neutre : ${t.centerPercent}%`} />
+                    <div style={{ width: `${t.rightPercent}%` }} className="bg-blue-600" title={`Droite : ${t.rightPercent}%`} />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-500">
+                    <span className="text-red-700">{t.leftPercent}% G.</span>
+                    <span className="text-slate-600">{t.centerPercent}% N.</span>
+                    <span className="text-blue-700">{t.rightPercent}% D.</span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-600 leading-snug">
+                  {t.dominantDescription}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 

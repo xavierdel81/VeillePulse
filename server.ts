@@ -1603,8 +1603,35 @@ app.post('/api/scan-source', async (req: Request, res: Response) => {
       
       let matchedTopic: any = null;
 
-      // 1. MANIFESTATIONS, GRÈVES & LUTTES SOCIALES (Règle absolue : jamais sous corruption !)
+      // RÈGLE 0 : AVIS POLITIQUES, TRIBUNES D'OPINION & ENTRETIENS IDÉOLOGIQUES (ex: Louis Michel, tribunes d'élus) -> DÉMOCRATIE
       if (
+        (textForTopic.includes('louis michel') ||
+         textForTopic.includes('donne son avis') ||
+         textForTopic.includes('débat d\'idées') ||
+         textForTopic.includes('debat d\'idees') ||
+         textForTopic.includes('remettre en permanence en cause') ||
+         textForTopic.includes('opinion')) &&
+        !textForTopic.includes('grève générale') &&
+        !textForTopic.includes('piquet de grève')
+      ) {
+        matchedTopic = validTopics.find((t: any) => t.id === 'topic-democratie-libertes');
+      }
+
+      // RÈGLE 1 : BUDGETS PUBLICS, ÉCONOMIE TOUCHANT AU SOCIAL & SERVICE PUBLIC (ex: accord budget RTBF, FWB, réformes de structures)
+      // Ne doit JAMAIS être classé sous corruption ! Va dans Démocratie (impact social & institutionnel)
+      if (!matchedTopic && (
+        (textForTopic.includes('budget') || textForTopic.includes('budgétaire') || textForTopic.includes('deficit') || textForTopic.includes('déficit')) &&
+        (textForTopic.includes('rtbf') || textForTopic.includes('fwb') || textForTopic.includes('fédération wallonie') || textForTopic.includes('wallonie') || textForTopic.includes('service public') || textForTopic.includes('social') || textForTopic.includes('accord')) &&
+        !textForTopic.includes('pot-de-vin') &&
+        !textForTopic.includes('pots-de-vin') &&
+        !textForTopic.includes('détournement') &&
+        !textForTopic.includes('malversation')
+      )) {
+        matchedTopic = validTopics.find((t: any) => t.id === 'topic-democratie-libertes');
+      }
+
+      // 2. MANIFESTATIONS, GRÈVES & LUTTES SOCIALES (Règle absolue : revendications ouvrières/étudiantes directes, jamais sous corruption !)
+      if (!matchedTopic && (
         textForTopic.includes('manifestat') ||
         textForTopic.includes('manif') ||
         textForTopic.includes('grève') ||
@@ -1627,11 +1654,11 @@ app.post('/api/scan-source', async (req: Request, res: Response) => {
         textForTopic.includes('allocataire') ||
         textForTopic.includes('pouvoir d\'achat') ||
         textForTopic.includes('luttes sociales')
-      ) {
+      )) {
         matchedTopic = validTopics.find((t: any) => t.id === 'topic-luttes-sociales');
       }
 
-      // 2. RECOURS CADA & TRANSPARENCE ADMINISTRATIVE
+      // 3. RECOURS CADA & TRANSPARENCE ADMINISTRATIVE
       if (!matchedTopic && (
         textForTopic.includes('cada') ||
         textForTopic.includes('transparencia') ||
@@ -1642,7 +1669,7 @@ app.post('/api/scan-source', async (req: Request, res: Response) => {
         matchedTopic = validTopics.find((t: any) => t.id === 'topic-transparence');
       }
 
-      // 3. CORRUPTION, POTS-DE-VIN & MARCHÉS PUBLICS
+      // 4. CORRUPTION, POTS-DE-VIN & MARCHÉS PUBLICS (Strictement réservé aux infractions, pots-de-vin et malversations !)
       if (!matchedTopic && (
         textForTopic.includes('corruption') ||
         textForTopic.includes('pot-de-vin') ||
@@ -1652,23 +1679,41 @@ app.post('/api/scan-source', async (req: Request, res: Response) => {
         textForTopic.includes('cumuleo') ||
         textForTopic.includes('fraude fiscale') ||
         textForTopic.includes('marchés publics truqués') ||
-        textForTopic.includes('intercommunale')
+        textForTopic.includes('semlex') ||
+        (textForTopic.includes('intercommunale') && (textForTopic.includes('scandale') || textForTopic.includes('fraude') || textForTopic.includes('publifin')))
       )) {
         matchedTopic = validTopics.find((t: any) => t.id === 'topic-corruption');
       }
 
-      // 4. DÉMOCRATIE & LIBERTÉS PUBLIQUES
+      // 5. DÉMOCRATIE & LIBERTÉS PUBLIQUES
       if (!matchedTopic && (
         textForTopic.includes('démocratie') ||
+        textForTopic.includes('democratie') ||
         textForTopic.includes('libertés publiques') ||
         textForTopic.includes('ligue des droits humains') ||
         textForTopic.includes('ldh') ||
-        textForTopic.includes('état de droit')
+        textForTopic.includes('état de droit') ||
+        textForTopic.includes('conseil communal') ||
+        textForTopic.includes('interpellation citoyenne')
       )) {
         matchedTopic = validTopics.find((t: any) => t.id === 'topic-democratie-libertes');
       }
 
-      // 5. Keyword search matching across topics
+      // 6. AUTO-DÉFENSE & ZÉTÉTIQUE
+      if (!matchedTopic && (
+        textForTopic.includes('autodéfense') ||
+        textForTopic.includes('auto-défense') ||
+        textForTopic.includes('sophisme') ||
+        textForTopic.includes('rhétorique') ||
+        textForTopic.includes('zététique') ||
+        textForTopic.includes('esprit critique') ||
+        textForTopic.includes('viktorovitch') ||
+        textForTopic.includes('hygiène mentale')
+      )) {
+        matchedTopic = validTopics.find((t: any) => t.id === 'topic-autodefense');
+      }
+
+      // 7. Keyword search matching across topics
       if (!matchedTopic) {
         matchedTopic = validTopics.find((t: any) => {
           if (!t.keywords) return false;
@@ -1680,7 +1725,7 @@ app.post('/api/scan-source', async (req: Request, res: Response) => {
       }
 
       if (!matchedTopic) {
-        matchedTopic = validTopics.find((t: any) => t.id === 'topic-luttes-sociales') || validTopics[0];
+        matchedTopic = validTopics.find((t: any) => t.id === 'topic-democratie-libertes') || validTopics[0];
       }
 
       const deepUrl = ensureDeepArticleUrl(item.link, item.title, source.name);

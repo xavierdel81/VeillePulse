@@ -87,6 +87,8 @@ export interface NewsAlert {
   sourceUrl: string;
   authorOrAccount?: string;
   directQuote?: string; // Citation exacte extraite de l'article ou de la publication
+  fullArticleContent?: string; // Contenu intégral et retranscription textuelle de l'article pour consultation directe dans la fiche
+  directArticleUrl?: string; // URL directe vers l'article spécifique (différenciée de la racine du média)
   publishedAt: string; // Ex: "Il y a 3 heures", "15 mai 2024", etc.
   publishedDateExact?: string; // Date ISO pour tri chronologique strict
   detectedAt: string;
