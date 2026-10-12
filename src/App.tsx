@@ -35,6 +35,7 @@ import {
   isDuplicateInCollection,
   isSyntheticAlert,
 } from './utils/deduplication';
+import { getEffectiveAlertScope } from './utils/politicalLeaning';
 
 import { Header } from './components/Header';
 import { TopicSelector } from './components/TopicSelector';
@@ -1027,8 +1028,9 @@ export default function App() {
   };
 
   // Visible alerts filtered by selected scope (Local, National, International) and topic
+  // Uses getEffectiveAlertScope so 100% of alerts (whether 57 or 201+) fall cleanly into one of the 3 geographic categories
   const visibleAlerts = alerts.filter((alert) => {
-    if (selectedScope !== 'all' && (alert.scope || 'local') !== selectedScope) {
+    if (selectedScope !== 'all' && getEffectiveAlertScope(alert) !== selectedScope) {
       return false;
     }
     if (selectedTopicId !== 'all' && alert.topicId !== selectedTopicId) {

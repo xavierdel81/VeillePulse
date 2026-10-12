@@ -3,6 +3,8 @@ import { WatchTopic, TopicScope, NewsAlert } from '../types/watch';
 import { Plus, MapPin, Flag, Globe, Layers, Filter } from 'lucide-react';
 import pressBg from '../assets/images/printing_press_conveyor_1791464634662.jpg';
 
+import { getEffectiveAlertScope } from '../utils/politicalLeaning';
+
 interface TopicSelectorProps {
   topics: WatchTopic[];
   alerts: NewsAlert[];
@@ -24,11 +26,12 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
   onSelectScope,
   onOpenNewTopicModal,
 }) => {
-  // 1. Dynamic alerts counts by territory (scope)
+  // 1. Dynamic alerts counts by territory (scope) calculés avec getEffectiveAlertScope
+  // Garantit la correspondance exacte : localAlertsCount + nationalAlertsCount + internationalAlertsCount === totalAlertsCount !
   const totalAlertsCount = alerts.length;
-  const localAlertsCount = alerts.filter((a) => (a.scope || 'local') === 'local').length;
-  const nationalAlertsCount = alerts.filter((a) => a.scope === 'national').length;
-  const internationalAlertsCount = alerts.filter((a) => a.scope === 'international').length;
+  const localAlertsCount = alerts.filter((a) => getEffectiveAlertScope(a) === 'local').length;
+  const nationalAlertsCount = alerts.filter((a) => getEffectiveAlertScope(a) === 'national').length;
+  const internationalAlertsCount = alerts.filter((a) => getEffectiveAlertScope(a) === 'international').length;
 
   // 2. Les 5 piliers de veille citoyenne (Corruption, CADA, Luttes Sociales, Démocratie, Auto-Défense) sont transversaux et toujours visibles dans tous les territoires
   const visibleTopics = topics.filter((t) => {
@@ -44,7 +47,7 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
   const alertsInCurrentScope =
     selectedScope === 'all'
       ? alerts
-      : alerts.filter((a) => (a.scope || 'local') === selectedScope);
+      : alerts.filter((a) => getEffectiveAlertScope(a) === selectedScope);
 
   return (
     <div className="border-b border-slate-700/80 sticky top-16 z-20 shadow-lg relative overflow-hidden bg-slate-950 text-white">

@@ -18,11 +18,13 @@ import {
   getWaybackMachineUrl,
   inferPoliticalLeaningFromSource,
   getEffectivePoliticalLeaning,
+  getEffectiveAlertScope,
 } from '../utils/politicalLeaning';
 import {
   isDuplicateInCollection,
   purgeDuplicateAlerts,
 } from '../utils/deduplication';
+import { formatArticleDateWithYear } from '../utils/dateHelper';
 
 /**
  * Clean and decode HTML entities from RSS and web text
@@ -650,11 +652,19 @@ export async function scanTopicClientSide(
     const alertId = `alert-client-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`;
     const exactDate = new Date(Date.now() - i * 180000).toISOString();
 
+    const calculatedScope = getEffectiveAlertScope({
+      scope: topic.scope,
+      title: item.title,
+      summary: item.summary,
+      source: item.source,
+      sourceUrl: safeUrl,
+    });
+
     formattedAlerts.push({
       id: alertId,
       topicId: topic.id,
       topicTitle: topic.title,
-      scope: topic.scope || 'local',
+      scope: calculatedScope,
       sourceType: isVideo ? 'youtube' : 'presse',
       politicalLeaning: pol,
       dominantBiasLabel: dominantBias.biasLabel,
@@ -682,7 +692,7 @@ export async function scanTopicClientSide(
       sourceUrl: safeUrl,
       authorOrAccount: item.source || 'VeillePulse',
       directQuote: `« ${item.title} »`,
-      publishedAt: `Aujourd'hui (${currentYear})`,
+      publishedAt: formatArticleDateWithYear(undefined, exactDate),
       publishedDateExact: exactDate,
       detectedAt: exactDate,
       impactScore: Math.min(95, 78 + (i % 4) * 4),
@@ -838,7 +848,13 @@ export async function scanSourceClientSide(
       id: `alert-source-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 6)}`,
       topicId: matchedTopic.id,
       topicTitle: matchedTopic.title,
-      scope: source.scope || 'national',
+      scope: getEffectiveAlertScope({
+        scope: source.scope,
+        title: item.title,
+        summary: item.summary,
+        source: source.name,
+        sourceUrl: safeUrl,
+      }),
       sourceType: isVideo ? 'youtube' : 'presse',
       politicalLeaning: pol,
       dominantBiasLabel: dominantBias.biasLabel,
@@ -868,7 +884,7 @@ export async function scanSourceClientSide(
       authorOrAccount: source.name,
       directQuote: `« ${item.title} »`,
       fullArticleContent: `${item.title}\n\n${item.summary || `Enquête et dossier d'actualité publié par ${source.name}.`}\n\nL'article détaille les répercussions institutionnelles et citoyennes, recoupant les témoignages des parties prenantes et rappelant le cadre juridique en vigueur. Ce contenu est indexé pour consultation directe dans la fiche documentaire VeillePulse.`,
-      publishedAt: `Aujourd'hui (${currentYear})`,
+      publishedAt: formatArticleDateWithYear(undefined, new Date(Date.now() - index * 90000).toISOString()),
       publishedDateExact: new Date(Date.now() - index * 90000).toISOString(),
       detectedAt: new Date(Date.now() - index * 90000).toISOString(),
       impactScore: Math.min(95, 74 + index * 4),

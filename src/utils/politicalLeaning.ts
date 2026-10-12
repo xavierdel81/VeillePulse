@@ -764,6 +764,8 @@ export function getSourceCountry(sourceName: string): { country: string; flag: s
     s.includes('sudinfo') ||
     s.includes('rtbf') ||
     s.includes('l\'avenir') ||
+    s.includes('télésambre') ||
+    s.includes('telesambre') ||
     s.includes('médor') ||
     s.includes('medor') ||
     s.includes('pour.press') ||
@@ -787,7 +789,20 @@ export function getSourceCountry(sourceName: string): { country: string; flag: s
     s.includes('de tijd') ||
     s.includes('voka') ||
     s.includes('uwe') ||
-    s.includes('alter échos')
+    s.includes('alter échos') ||
+    s.includes('alter echos') ||
+    s.includes('bx1') ||
+    s.includes('rtc') ||
+    s.includes('tv com') ||
+    s.includes('canal zoom') ||
+    s.includes('matele') ||
+    s.includes('notele') ||
+    s.includes('notélé') ||
+    s.includes('tv lux') ||
+    s.includes('actv') ||
+    s.includes('antenne centre') ||
+    s.includes('cumuleo') ||
+    s.includes('belga')
   ) {
     return { country: 'Belgique', flag: '🇧🇪' };
   }
@@ -810,11 +825,186 @@ export function getSourceCountry(sourceName: string): { country: string; flag: s
     s.includes('frustration') ||
     s.includes('regards') ||
     s.includes('quadrature') ||
-    s.includes('causeur')
+    s.includes('causeur') ||
+    s.includes('afp') ||
+    s.includes('tv libertés') ||
+    s.includes('tvl') ||
+    s.includes('boulevard voltaire') ||
+    s.includes('bvoltaire') ||
+    s.includes('frontières') ||
+    s.includes('breizh-info') ||
+    s.includes('fdesouche') ||
+    s.includes('éléments') ||
+    s.includes('l\'incorrect') ||
+    s.includes('riposte laïque') ||
+    s.includes('le canard réfractaire') ||
+    s.includes('datagueule')
   ) {
     return { country: 'France', flag: '🇫🇷' };
   }
   return { country: 'International', flag: '🌍' };
+}
+
+/**
+ * Calcule dynamiquement et avec précision le scope géographique réel d'une alerte
+ * (Local / Wallonie-Charleroi, National / Belgique, ou International)
+ * Empêche toute perte de flux non comptabilisés ou bloqués dans un scope 'all' fictif.
+ */
+export function getEffectiveAlertScope(
+  alert: { scope?: string; title?: string; summary?: string; source?: string; sourceUrl?: string; tags?: string[] }
+): 'local' | 'national' | 'international' {
+  const explicitScope = alert.scope?.toLowerCase();
+  const text = `${alert.title || ''} ${alert.summary || ''} ${(alert.tags || []).join(' ')}`.toLowerCase();
+  const sourceName = (alert.source || '').toLowerCase();
+  const sourceUrl = (alert.sourceUrl || '').toLowerCase();
+
+  // 1. DÉTECTION INTERNATIONALE FORTE
+  // Si la source est un média d'information étranger reconnu (Mediapart, Le Monde, Le Figaro, Blast, Libération, Breizh-Info, TV Libertés, etc.)
+  // ET que le sujet ne concerne pas spécifiquement la politique belge intérieure.
+  const isFrenchOrForeignSource =
+    sourceName.includes('mediapart') ||
+    sourceName.includes('blast') ||
+    sourceName.includes('le monde') ||
+    sourceName.includes('le figaro') ||
+    sourceName.includes('libération') ||
+    sourceName.includes('basta') ||
+    sourceName.includes('reflets') ||
+    sourceName.includes('humanité') ||
+    sourceName.includes('viktorovitch') ||
+    sourceName.includes('hygiène mentale') ||
+    sourceName.includes('elucid') ||
+    sourceName.includes('thinkerview') ||
+    sourceName.includes('defakator') ||
+    sourceName.includes('frustration') ||
+    sourceName.includes('causeur') ||
+    sourceName.includes('tv libertés') ||
+    sourceName.includes('tvl') ||
+    sourceName.includes('boulevard voltaire') ||
+    sourceName.includes('bvoltaire') ||
+    sourceName.includes('frontières') ||
+    sourceName.includes('breizh-info') ||
+    sourceName.includes('fdesouche') ||
+    sourceName.includes('éléments') ||
+    sourceName.includes('l\'incorrect') ||
+    sourceName.includes('canard réfractaire') ||
+    sourceName.includes('datagueule') ||
+    sourceName.includes('afp');
+
+  const hasExplicitBelgianNationalContext =
+    text.includes('belgique') ||
+    text.includes('fédéral belge') ||
+    text.includes('gouvernement arizona') ||
+    text.includes('de wever') ||
+    text.includes('bouchez');
+
+  if (isFrenchOrForeignSource && !hasExplicitBelgianNationalContext) {
+    return 'international';
+  }
+
+  // 2. ÉCHELLE LOCALE STRICTE (Charleroi, entités communales carolos & Télésambre) :
+  // Réservée aux affaires strictement locales : conseil communal de Charleroi, voiries, comités de quartier
+  const isStrictlyLocalCaroloSource =
+    sourceName.includes('télésambre') ||
+    sourceName.includes('telesambre') ||
+    sourceName.includes('notélé') ||
+    sourceName.includes('notele') ||
+    sourceName.includes('transparencia charleroi') ||
+    sourceName.includes('vigilance citoyenne charleroi') ||
+    sourceName.includes('still pissing');
+
+  const isStrictlyLocalCaroloCity =
+    text.includes('charleroi') ||
+    text.includes('gosselies') ||
+    text.includes('marcinelle') ||
+    text.includes('marchienne') ||
+    text.includes('châtelet') ||
+    text.includes('couillet') ||
+    text.includes('jumet') ||
+    text.includes('monceau') ||
+    text.includes('dampremy') ||
+    text.includes('montignies');
+
+  // Si c'est explicitement local ou issu d'un média local carolo sans dimension fédérale
+  if (
+    (isStrictlyLocalCaroloSource || (isStrictlyLocalCaroloCity && explicitScope === 'local')) &&
+    !text.includes('fédéral') &&
+    !text.includes('gouvernement fédéral') &&
+    !text.includes('budget fédéral')
+  ) {
+    return 'local';
+  }
+
+  // 3. ÉCHELLE NATIONALE (BELGIQUE / FÉDÉRAL / FWB / RÉGIONS) :
+  // Tous les grands quotidiens et médias belges (RTBF, Le Soir, La Libre, L'Écho, Le Vif, Trends, Solidaire, Médor, Pour.press, Belga...)
+  // et tous les dossiers institutionnels belges (Fédéral, Wallonie, FWB, chômage, budget, justice, syndicats FGTB/CSC).
+  const isBelgianNationalMedia =
+    sourceName.includes('rtbf') ||
+    sourceName.includes('le soir') ||
+    sourceName.includes('la libre') ||
+    sourceName.includes('l\'écho') ||
+    sourceName.includes('lecho') ||
+    sourceName.includes('de tijd') ||
+    sourceName.includes('dhnet') ||
+    sourceName.includes('la dernière heure') ||
+    sourceName.includes('sudinfo') ||
+    sourceName.includes('l\'avenir') ||
+    sourceName.includes('trends') ||
+    sourceName.includes('le vif') ||
+    sourceName.includes('ln24') ||
+    sourceName.includes('belga') ||
+    sourceName.includes('cumuleo') ||
+    sourceName.includes('transparencia') ||
+    sourceName.includes('solidaire') ||
+    sourceName.includes('ptb') ||
+    sourceName.includes('pour.press') ||
+    sourceName.includes('médor') ||
+    sourceName.includes('alter échos') ||
+    sourceName.includes('wilfried') ||
+    sourceName.includes('cadtm') ||
+    sourceName.includes('ligue des droits humains') ||
+    sourceUrl.includes('.be');
+
+  const hasBelgianNationalKeywords =
+    text.includes('belgique') ||
+    text.includes('belge') ||
+    text.includes('fédéral') ||
+    text.includes('federal') ||
+    text.includes('bruxelles') ||
+    text.includes('wallonie') ||
+    text.includes('liège') ||
+    text.includes('liege') ||
+    text.includes('namur') ||
+    text.includes('mons') ||
+    text.includes('tournai') ||
+    text.includes('verviers') ||
+    text.includes('flandre') ||
+    text.includes('fwb') ||
+    text.includes('fédération wallonie') ||
+    text.includes('onem') ||
+    text.includes('forem') ||
+    text.includes('fgtb') ||
+    text.includes('csc') ||
+    text.includes('chômage') ||
+    text.includes('arizona') ||
+    text.includes('de wever') ||
+    text.includes('bouchez') ||
+    text.includes('prévot') ||
+    text.includes('magnette') ||
+    text.includes('parlement') ||
+    text.includes('loi') ||
+    text.includes('ministre') ||
+    text.includes('justice') ||
+    text.includes('police');
+
+  if (isBelgianNationalMedia || hasBelgianNationalKeywords || explicitScope === 'national') {
+    return 'national';
+  }
+
+  // 4. Si scope local expressément demandé et confirmé
+  if (explicitScope === 'local') return 'local';
+
+  // 5. Par défaut : International
+  return 'international';
 }
 
 export function getChannelBadge(channel: SourceChannel) {

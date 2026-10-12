@@ -619,6 +619,139 @@ function inferPoliticalLeaning(sourceName: string, sourceUrl?: string, title?: s
 }
 
 /**
+ * Calcule dynamiquement le scope géographique réel d'une alerte
+ * (Local / Charleroi-Wallonie, National / Belgique, ou International)
+ */
+function calculateEffectiveScope(
+  topicScope: string | undefined,
+  sourceScope: string | undefined,
+  title: string | undefined,
+  summary: string | undefined,
+  sourceName: string | undefined,
+  url: string | undefined
+): 'local' | 'national' | 'international' {
+  const text = `${title || ''} ${summary || ''} ${sourceName || ''} ${url || ''}`.toLowerCase();
+  const sName = (sourceName || '').toLowerCase();
+
+  // A. ÉTRANGER / INTERNATIONAL FORT
+  const isForeignSource =
+    sName.includes('mediapart') ||
+    sName.includes('blast') ||
+    sName.includes('le monde') ||
+    sName.includes('le figaro') ||
+    sName.includes('libération') ||
+    sName.includes('basta') ||
+    sName.includes('reflets') ||
+    sName.includes('humanité') ||
+    sName.includes('viktorovitch') ||
+    sName.includes('hygiène mentale') ||
+    sName.includes('elucid') ||
+    sName.includes('thinkerview') ||
+    sName.includes('defakator') ||
+    sName.includes('tv libertés') ||
+    sName.includes('tvl') ||
+    sName.includes('boulevard voltaire') ||
+    sName.includes('bvoltaire') ||
+    sName.includes('frontières') ||
+    sName.includes('breizh-info') ||
+    sName.includes('fdesouche') ||
+    sName.includes('éléments') ||
+    sName.includes('l\'incorrect') ||
+    sName.includes('canard réfractaire');
+
+  if (isForeignSource && !text.includes('fédéral belge') && !text.includes('gouvernement arizona')) {
+    return 'international';
+  }
+
+  // B. ÉCHELLE LOCALE STRICTE : Charleroi, agglomération carolorégienne & Télésambre
+  const isStrictlyLocalCaroloSource =
+    sName.includes('télésambre') ||
+    sName.includes('telesambre') ||
+    sName.includes('notélé') ||
+    sName.includes('transparencia charleroi') ||
+    sName.includes('vigilance citoyenne charleroi') ||
+    sName.includes('still pissing');
+
+  const isStrictlyLocalCaroloCity =
+    text.includes('charleroi') ||
+    text.includes('gosselies') ||
+    text.includes('marcinelle') ||
+    text.includes('marchienne') ||
+    text.includes('châtelet') ||
+    text.includes('couillet') ||
+    text.includes('jumet') ||
+    text.includes('monceau');
+
+  if ((isStrictlyLocalCaroloSource || (isStrictlyLocalCaroloCity && (sourceScope === 'local' || topicScope === 'local'))) &&
+      !text.includes('fédéral') && !text.includes('budget fédéral') && !text.includes('gouvernement arizona')) {
+    return 'local';
+  }
+
+  // C. ÉCHELLE NATIONALE : Fédéral, Belgique, Bruxelles, FWB, Wallonie, institutions belges et grands médias belges
+  const isBelgianNationalMedia =
+    sName.includes('rtbf') ||
+    sName.includes('le soir') ||
+    sName.includes('la libre') ||
+    sName.includes('l\'écho') ||
+    sName.includes('lecho') ||
+    sName.includes('de tijd') ||
+    sName.includes('dhnet') ||
+    sName.includes('la dernière heure') ||
+    sName.includes('sudinfo') ||
+    sName.includes('l\'avenir') ||
+    sName.includes('trends') ||
+    sName.includes('le vif') ||
+    sName.includes('ln24') ||
+    sName.includes('belga') ||
+    sName.includes('cumuleo') ||
+    sName.includes('transparencia') ||
+    sName.includes('solidaire') ||
+    sName.includes('ptb') ||
+    sName.includes('pour.press') ||
+    sName.includes('médor') ||
+    sName.includes('alter échos') ||
+    sName.includes('wilfried') ||
+    sName.includes('cadtm') ||
+    sName.includes('ligue des droits humains') ||
+    (url?.includes('.be') ?? false);
+
+  const hasBelgianNationalKeywords =
+    text.includes('belgique') ||
+    text.includes('belge') ||
+    text.includes('bruxelles') ||
+    text.includes('fédéral') ||
+    text.includes('federal') ||
+    text.includes('wallonie') ||
+    text.includes('liège') ||
+    text.includes('liege') ||
+    text.includes('namur') ||
+    text.includes('mons') ||
+    text.includes('tournai') ||
+    text.includes('flandre') ||
+    text.includes('fwb') ||
+    text.includes('fédération wallonie') ||
+    text.includes('onem') ||
+    text.includes('forem') ||
+    text.includes('fgtb') ||
+    text.includes('csc') ||
+    text.includes('ptb') ||
+    text.includes('chômage') ||
+    text.includes('arizona') ||
+    text.includes('bouchez') ||
+    text.includes('de wever') ||
+    text.includes('prévot') ||
+    text.includes('magnette');
+
+  if (isBelgianNationalMedia || hasBelgianNationalKeywords || sourceScope === 'national' || topicScope === 'national') {
+    return 'national';
+  }
+
+  if (sourceScope === 'local' || topicScope === 'local') return 'local';
+
+  return 'international';
+}
+
+/**
  * Returns a GUARANTEED UNIQUE high-quality thematic or authentic YouTube thumbnail image
  * Never repeats the same fallback image or microphone picture!
  */
@@ -991,13 +1124,17 @@ app.post('/api/scan-topic', async (req: Request, res: Response) => {
       }
     }
 
-    // Also enrich with articles from RTBF, independent media, and right-wing / alternative feeds (pluralisme intégral)
+    // Also enrich with articles from RTBF, Belgian newspapers (L'Écho, Trends), independent investigative media, and right-wing / alternative feeds (pluralisme intégral)
     try {
-      const [rtbfItems, bastaItems, chronikItems, matribuneItems, bvoltaireItems, breizhItems] = await Promise.allSettled([
-        fetchDirectRssFeed('https://rss.rtbf.be/article/rss/highlight_rtbf_info.xml', 20),
+      const [rtbfItems, lechoItems, trendsItems, solidaireItems, medorItems, alterItems, pourItems, bastaItems, bvoltaireItems, breizhItems] = await Promise.allSettled([
+        fetchDirectRssFeed('https://rss.rtbf.be/article/rss/highlight_rtbf_info.xml', 25),
+        fetchDirectRssFeed('https://www.lecho.be/rss/actualite.xml', 15),
+        fetchDirectRssFeed('https://trends.levif.be/feed/', 15),
+        fetchDirectRssFeed('https://solidaire.org/rss.xml', 15),
+        fetchDirectRssFeed('https://medor.coop/rss.xml', 10),
+        fetchDirectRssFeed('https://www.alterechos.be/feed/', 10),
+        fetchDirectRssFeed('https://pour.press/feed/', 10),
         fetchDirectRssFeed('https://portail.basta.media/spip.php?page=backend', 6),
-        fetchDirectRssFeed('https://www.chronik.be/feed/', 4),
-        fetchDirectRssFeed('https://matribune.be/feed/', 4),
         fetchDirectRssFeed('https://bvoltaire.fr/feed/', 6),
         fetchDirectRssFeed('https://www.breizh-info.com/feed/', 6),
       ]);
@@ -1006,9 +1143,25 @@ app.post('/api/scan-topic', async (req: Request, res: Response) => {
       if (rtbfItems.status === 'fulfilled') {
         candidateFeeds.push(...rtbfItems.value.map((r: any) => ({ ...r, creator: 'RTBF Info' })));
       }
+      if (lechoItems.status === 'fulfilled') {
+        candidateFeeds.push(...lechoItems.value.map((l: any) => ({ ...l, creator: 'L\'Écho' })));
+      }
+      if (trendsItems.status === 'fulfilled') {
+        candidateFeeds.push(...trendsItems.value.map((t: any) => ({ ...t, creator: 'Trends-Tendances' })));
+      }
+      if (solidaireItems.status === 'fulfilled') {
+        candidateFeeds.push(...solidaireItems.value.map((s: any) => ({ ...s, creator: 'Solidaire (PTB)' })));
+      }
+      if (medorItems.status === 'fulfilled') {
+        candidateFeeds.push(...medorItems.value.map((m: any) => ({ ...m, creator: 'Médor' })));
+      }
+      if (alterItems.status === 'fulfilled') {
+        candidateFeeds.push(...alterItems.value.map((a: any) => ({ ...a, creator: 'Alter Échos' })));
+      }
+      if (pourItems.status === 'fulfilled') {
+        candidateFeeds.push(...pourItems.value.map((p: any) => ({ ...p, creator: 'Pour.press' })));
+      }
       if (bastaItems.status === 'fulfilled') candidateFeeds.push(...bastaItems.value);
-      if (chronikItems.status === 'fulfilled') candidateFeeds.push(...chronikItems.value.map((c: any) => ({ ...c, creator: 'Chronik (chronik.be)' })));
-      if (matribuneItems.status === 'fulfilled') candidateFeeds.push(...matribuneItems.value.map((m: any) => ({ ...m, creator: 'Ma Tribune (matribune.be)' })));
       if (bvoltaireItems.status === 'fulfilled') candidateFeeds.push(...bvoltaireItems.value.map((v: any) => ({ ...v, creator: 'Boulevard Voltaire' })));
       if (breizhItems.status === 'fulfilled') candidateFeeds.push(...breizhItems.value.map((b: any) => ({ ...b, creator: 'Breizh-Info' })));
 
@@ -1016,14 +1169,30 @@ app.post('/api/scan-topic', async (req: Request, res: Response) => {
         const titleLower = (b.title || '').toLowerCase();
         const descLower = (b.description || '').toLowerCase();
         const fullText = `${titleLower} ${descLower}`;
+
+        // Exclure les articles hors sujet (faits divers français, animaux, météo, sport)
+        if (fullText.includes('guêpe') || fullText.includes('frelon') || fullText.includes('football') || fullText.includes('ligue 1') || fullText.includes('météo')) {
+          continue;
+        }
+
         const isRelevant = (topic.keywords || []).some((k: string) => fullText.includes(k.toLowerCase())) ||
+                           fullText.includes('budget') ||
+                           fullText.includes('déficit') ||
+                           fullText.includes('dette') ||
+                           fullText.includes('gouvernement') ||
+                           fullText.includes('arizona') ||
+                           fullText.includes('fédéral') ||
                            fullText.includes('élève') ||
                            fullText.includes('lycéen') ||
                            fullText.includes('étudiant') ||
                            fullText.includes('manif') ||
                            fullText.includes('grève') ||
+                           fullText.includes('syndicat') ||
+                           fullText.includes('fgtb') ||
+                           fullText.includes('csc') ||
                            fullText.includes('enseignement') ||
-                           fullText.includes('école') ||
+                           fullText.includes('chômage') ||
+                           fullText.includes('allocataire') ||
                            fullText.includes('social') ||
                            fullText.includes('wallonie') ||
                            fullText.includes('charleroi') ||
@@ -1031,10 +1200,9 @@ app.post('/api/scan-topic', async (req: Request, res: Response) => {
                            fullText.includes('cada') ||
                            fullText.includes('corruption') ||
                            fullText.includes('démocratie') ||
+                           fullText.includes('liberté') ||
                            fullText.includes('autodéfense') ||
-                           fullText.includes('auto-défense') ||
                            fullText.includes('sophisme') ||
-                           fullText.includes('rhétorique') ||
                            fullText.includes('justice');
         if (isRelevant && !liveRssItems.some((l) => l.title === b.title)) {
           liveRssItems.unshift({
@@ -1234,7 +1402,7 @@ Réponds EXCLUSIVEMENT sous forme d'un tableau JSON valide respectant ce schéma
           imageUrl: item.imageUrl,
           directQuote: item.directQuote || `« ${item.title} »`,
           summary: item.summary || `Actualité récente relayée par ${item.source} concernant ${topic.title.toLowerCase()}. Ce signal d'information permet de suivre les dernières évolutions factuelles et les positions publiques.`,
-          publishedAt: item.pubDate ? new Date(item.pubDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '7 oct. 2026',
+          publishedAt: item.pubDate ? new Date(item.pubDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
           impactScore: item.impactScore || Math.min(95, 72 + index * 3),
           sentiment: item.sentiment || (index % 2 === 0 ? 'alerte' : 'opportunite'),
           factuality: item.factuality || 'elevee',
@@ -1306,17 +1474,21 @@ Réponds EXCLUSIVEMENT sous forme d'un tableau JSON valide respectant ce schéma
       };
 
       // Formater la date en garantissant TOUJOURS la présence de l'année (ex: 2026)
+      const nowObj = new Date();
+      const todayStr = nowObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+      const yesterdayStr = new Date(Date.now() - 86400000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+
       let rawDate = (item.publishedAt || '').trim();
       let formattedPublishedAt = rawDate;
       if (!rawDate || rawDate === 'Récemment') {
-        formattedPublishedAt = '7 oct. 2026';
+        formattedPublishedAt = todayStr;
       } else if (!/\b(19\d\d|20\d\d)\b/.test(rawDate)) {
         if (rawDate.toLowerCase().includes("aujourd'hui")) {
-          formattedPublishedAt = `Aujourd'hui (7 oct. 2026)`;
+          formattedPublishedAt = `Aujourd'hui (${todayStr})`;
         } else if (rawDate.toLowerCase().includes('hier')) {
-          formattedPublishedAt = `Hier (6 oct. 2026)`;
+          formattedPublishedAt = `Hier (${yesterdayStr})`;
         } else {
-          formattedPublishedAt = `${rawDate} (2026)`;
+          formattedPublishedAt = `${rawDate} (${nowObj.getFullYear()})`;
         }
       }
 
@@ -1349,7 +1521,7 @@ Réponds EXCLUSIVEMENT sous forme d'un tableau JSON valide respectant ce schéma
         id: `alert-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 7)}`,
         topicId: assignedTopicId,
         topicTitle: assignedTopicTitle,
-        scope: topic.scope || 'local',
+        scope: calculateEffectiveScope(topic.scope, item.scope, item.title, item.summary, item.source, deepUrl),
         sourceType: finalSourceType,
         politicalLeaning: pol,
         dominantBiasLabel,
@@ -1743,7 +1915,7 @@ app.post('/api/scan-source', async (req: Request, res: Response) => {
         id: `alert-source-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 6)}`,
         topicId: matchedTopic.id,
         topicTitle: matchedTopic.title,
-        scope: source.scope || 'national',
+        scope: calculateEffectiveScope(matchedTopic.scope, source.scope, item.title, item.description, source.name, deepUrl),
         sourceType: sType,
         politicalLeaning: source.politicalLeaning || inferPoliticalLeaning(source.name, source.url),
         imageUrl: uniqueImage,
@@ -1760,7 +1932,7 @@ app.post('/api/scan-source', async (req: Request, res: Response) => {
         directQuote: `« ${item.title} »`,
         publishedAt: item.pubDate
           ? new Date(item.pubDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
-          : '7 oct. 2026',
+          : new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
         publishedDateExact: item.pubDate ? new Date(item.pubDate).toISOString() : new Date(Date.now() - index * 90000).toISOString(),
         detectedAt: new Date(Date.now() - index * 90000).toISOString(),
         impactScore: Math.min(95, 72 + index * 4),
